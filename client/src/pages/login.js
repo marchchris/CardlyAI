@@ -3,7 +3,7 @@ import { AuthContext } from "../config/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 // Components
-import Navbar from "../components/navBar";
+import Navbar from "../components/navbar";
 import Loading from "../components/loadingScreen";
 
 export default function Login() {
@@ -63,7 +63,7 @@ export default function Login() {
             <div>
                 <div class="min-h-screen flex flex-col items-center justify-center py-6 px-4 mt-5">
                     <div class="max-w-md w-full">
-                        <div class="p-8 rounded-2xl bg-white border border-gray-200">
+                        <div class="p-8 rounded-2xl bg-gray-50 border border-gray-200">
                             <h2 class="text-gray-900 text-center 2xl:text-2xl xl:text-lg font-bold">Sign in</h2>
                             <form class="mt-8 space-y-4" onSubmit={handleSubmit}>
                                 {error && <p class="text-red-500 2xl:text-sm xl:text-xs text-center">{error}</p>}
