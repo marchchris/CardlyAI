@@ -1,7 +1,9 @@
+import "../styles/loading.css";
+
 export default function Loading() {
     return (
-        <div>
-            <h1>Loading...</h1>
+        <div className = "flex justify-center items-center h-screen">
+            <div className = "loader"></div>
         </div>
     );
 }

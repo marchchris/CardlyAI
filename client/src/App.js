@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
+import Dashboard from "./pages/dashboard";
+import StudyDeck from "./pages/studyDeck";
 
 // Protected Routes
 import PrivateRoute from "./PrivateRoute";
@@ -11,17 +13,16 @@ import AuthProvider from "./config/AuthProvider";
 
 function App() {
   return (
-<AuthProvider>
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/">
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
-            <Route path = "dashboard" element={<PrivateRoute><h1>Welcome to Dashboard Lol</h1></PrivateRoute>} />
-
+            <Route path="dashboard" element={<PrivateRoute><Dashboard/></PrivateRoute>} />
+            <Route path="study/:deckId" element={<PrivateRoute><StudyDeck/></PrivateRoute>} />
             <Route path="*" element={<h1>Not Found</h1>} />
-
           </Route>
         </Routes>
       </BrowserRouter>

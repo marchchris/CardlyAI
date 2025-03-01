@@ -9,19 +9,19 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex items-center relative">
-            <Navbar />
+            <Navbar currentPage = {"home"}/>
             <FloatingIcons />
             <div className="max-w-3xl mx-auto px-4 py-12 mt-10">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold text-black mb-4">
-                        Transform Text into Study Flashcards
+                        Convert Text Into Study Flashcards
                     </h1>
                     <p className="text-lg text-gray-600">
                         Simply paste your study material below and let AI summarise it into flashcards for you.
                     </p>
                 </div>
                 
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <div className="bg-gray-50 p-6 rounded-lg shadow-md">
                     <textarea
                         id="study-text"
                         className="w-full h-40 p-4 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
