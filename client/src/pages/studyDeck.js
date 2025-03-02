@@ -15,30 +15,9 @@ export default function StudyDeck() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real app, fetch the deck and cards from an API
         const fetchDeckAndCards = async () => {
             try {
-                // Simulating API call
-                setTimeout(() => {
-                    // Sample data
-                    const sampleDeck = {
-                        id: parseInt(deckId),
-                        title: `Deck ${deckId}`,
-                        color: ['red', 'green', 'blue', 'purple', 'yellow'][parseInt(deckId) % 5],
-                    };
-
-                    const sampleCards = [
-                        { id: 1, question: "What is the capital of France?", answer: "Paris" },
-                        { id: 2, question: "What is the powerhouse of the cell?", answer: "Mitochondria" },
-                        { id: 3, question: "What is the chemical symbol for water?", answer: "H₂O" },
-                        { id: 4, question: "Who wrote 'Romeo and Juliet'?", answer: "William Shakespeare" },
-                        { id: 5, question: "What is the largest planet in our solar system?", answer: "Jupiter" }
-                    ];
-
-                    setDeck(sampleDeck);
-                    setCards(sampleCards);
-                    setLoading(false);
-                }, 1000);
+                // Fetch deck data
             } catch (error) {
                 console.error("Error fetching deck data:", error);
                 setLoading(false);

@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { AuthContext } from "../config/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { sendEmailVerification } from "firebase/auth";
+import { createUser } from "../utils/databaseRoutes";
 
 // Components
 import Navbar from "../components/navbar";
@@ -9,7 +10,7 @@ import Loading from "../components/loadingScreen";
 
 export default function Register() {
     const [error, setError] = useState("");
-    const { createUser, user, loading, cancelLoading } = useContext(AuthContext);
+    const { createUser: firebaseCreateUser, user, loading, cancelLoading } = useContext(AuthContext);
     const navigate = useNavigate();
 
     if (loading) {
@@ -47,26 +48,37 @@ export default function Register() {
             return;
         }
 
-        createUser(email, password)
+        firebaseCreateUser(email, password)
             .then((result) => {
-                const userData = {
-                    userID: result.user.uid,
-                    resolvedAmount: 0,
-                    feedbackData: []
-                };
-
-                sendEmailVerification(result.user)
+                const firebaseUID = result.user.uid;
+                
+                // Add user to MongoDB database first
+                return createUser(firebaseUID)
                     .then(() => {
-                        navigate("/dashboard");
+                        console.log("User successfully added to database");
+                        // After successful database creation, proceed with email verification
+                        return result.user;
                     })
-                    .catch((error) => {
-                        setError("Failed to send verification email. Please try again.");
-                        console.log(error);
+                    .catch((dbError) => {
+                        console.error("Database error:", dbError);
+                        setError("Account created but had trouble setting up your profile. Please contact support.");
+                        cancelLoading();
+                        throw dbError; // Propagate the error to stop the chain
                     });
             })
+            .then((user) => {
+                // Now send email verification after successful DB operation
+                return sendEmailVerification(user);
+            })
+            .then(() => {
+                navigate("/dashboard");
+            })
             .catch((error) => {
-                const friendlyMessage = firebaseErrorMessages[error.code] || "An unexpected error occurred. Please try again.";
-                setError(friendlyMessage);
+                // This will catch errors from any stage of the process
+                if (error.code) { // Firebase auth error
+                    const friendlyMessage = firebaseErrorMessages[error.code] || "An unexpected error occurred. Please try again.";
+                    setError(friendlyMessage);
+                }
                 console.log(error);
                 cancelLoading();
             });
@@ -79,7 +91,7 @@ export default function Register() {
             <div>
                 <div class="min-h-screen flex flex-col items-center justify-center py-6 px-4 mt-5">
                     <div class="max-w-md w-full">
-                        <div class="p-8 rounded-2xl bg-gray-50 border border-gray-200">
+                        <div class="p-8 rounded-2xl bg-gray-50 shadow-md">
                             <h2 class="text-gray-900 text-center 2xl:text-2xl xl:text-lg font-bold">Create Account</h2>
                             <form class="mt-8 space-y-4" onSubmit={handleSubmit}>
                                 {error && <p class="text-red-500 2xl:text-sm xl:text-xs text-center">{error}</p>}

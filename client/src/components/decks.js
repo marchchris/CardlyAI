@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
+import { getUserDecks, createDeck } from '../utils/databaseRoutes';
 
-export default function Decks() {
+export default function Decks(props) {
+    const user = props.user;
     const navigate = useNavigate();
     const [decks, setDecks] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -11,6 +13,7 @@ export default function Decks() {
     const [cardCount, setCardCount] = useState(10);
     const [charCount, setCharCount] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [loadingDecks, setLoadingDecks] = useState(true);
     const [errors, setErrors] = useState({});
 
     // Change from word count to character count
@@ -21,29 +24,25 @@ export default function Decks() {
 
     const textareaRef = useRef(null);
 
+    // Fetch user's decks when component mounts or user changes
     useEffect(() => {
-        const sampleDecks = [
-            // Comment out to test empty state
+        const fetchDecks = async () => {
+            if (user && user.uid) {
+                setLoadingDecks(true);
+                try {
+                    const userDecks = await getUserDecks(user.uid);
+                    setDecks(userDecks || []);
+                } catch (error) {
+                    console.error("Error fetching decks:", error);
+                    // Optionally set an error state here
+                } finally {
+                    setLoadingDecks(false);
+                }
+            }
+        };
 
-            // { 
-            //     id: 1, 
-            //     title: 'Biology 101', 
-            //     cardCount: 24, 
-            //     color: 'green', 
-            //     previewImage: 'https://via.placeholder.com/300x200?text=Biology' 
-            // },
-            // { 
-            //     id: 2, 
-            //     title: 'History Notes', 
-            //     cardCount: 15, 
-            //     color: 'blue', 
-            //     previewImage: 'https://via.placeholder.com/300x200?text=History' 
-            // },
-
-        ];
-
-        setDecks(sampleDecks);
-    }, []);
+        fetchDecks();
+    }, [user]);
 
     const colorOptions = [
         { name: 'Red', value: 'red' },
@@ -82,38 +81,27 @@ export default function Decks() {
     };
 
     const handleCreateDeck = async () => {
-        if (!validateForm()) {
+        if (!validateForm() || !user || !user.uid) {
             return;
         }
 
         setLoading(true);
 
         try {
-            // In a real app, you would send this to an API
-            // const response = await fetch('/api/decks/create', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ 
-            //         title: newDeckTitle, 
-            //         content: newDeckContent, 
-            //         color: selectedColor,
-            //         cardCount: cardCount
-            //     })
-            // });
+            // Create the deck using our API
+            const result = await createDeck(
+                user.uid,
+                newDeckTitle,
+                selectedColor,
+                cardCount,
+                newDeckContent
+            );
 
-            // if (!response.ok) throw new Error('Failed to create deck');
-            // const data = await response.json();
-
-            // Simulate API response
-            const newDeck = {
-                id: decks.length + 1,
-                title: newDeckTitle,
-                cardCount: cardCount, // Now using the user-specified card count
-                color: selectedColor,
-                previewImage: `https://via.placeholder.com/300x200?text=${encodeURIComponent(newDeckTitle)}`
-            };
-
-            setDecks([...decks, newDeck]);
+            // Add the new deck to the local state
+            if (result && result.deck) {
+                setDecks(prevDecks => [...prevDecks, result.deck]);
+            }
+            
             resetForm();
             setIsModalOpen(false);
         } catch (error) {
@@ -165,7 +153,11 @@ export default function Decks() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            {decks.length === 0 ? (
+            {loadingDecks ? (
+                <div className="w-full flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            ) : decks.length === 0 ? (
                 <div className="w-full flex items-center justify-center">
                     <div className="bg-white shadow-md rounded-lg p-8 text-center w-1/2">
                         <h2 className="text-2xl font-semibold text-gray-700 mb-4">You have no decks</h2>
@@ -180,27 +172,28 @@ export default function Decks() {
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {decks.map((deck) => (
-                        <div key={deck.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleStudyDeck(deck.id)}>
-                            <div className="h-36 overflow-hidden">
+                        <div key={deck._id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleStudyDeck(deck._id)}>
+                            <div className="h-36 overflow-hidden bg-gray-200">
                                 <img
-                                    src={deck.previewImage}
+                                    src={`https://via.placeholder.com/300x200?text=${encodeURIComponent(deck.title)}`}
                                     alt={deck.title}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
                             <div className="p-4">
                                 <div className="flex items-center mb-2">
-                                    <div className={`h-4 w-4 rounded-full mr-2 ${getColorClass(deck.color)}`}></div>
+                                    <div className={`h-4 w-4 rounded-full mr-2 ${getColorClass(deck.colour)}`}></div>
                                     <h3 className="text-xl font-semibold text-gray-800">{deck.title}</h3>
                                 </div>
-                                <p className="text-gray-600">{deck.cardCount} {deck.cardCount === 1 ? 'card' : 'cards'}</p>
+                                <p className="text-gray-600">{deck.num_cards} {deck.num_cards === 1 ? 'card' : 'cards'}</p>
+                                <p className="text-xs text-gray-500 mt-1">Created: {new Date(deck.created_at).toLocaleDateString()}</p>
                                 <button
                                     className="p-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full transition duration-300"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleStudyDeck(deck.id);
+                                        handleStudyDeck(deck._id);
                                     }}
                                 >
                                     Study Now
@@ -367,7 +360,7 @@ export default function Decks() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Processing...
+                                            Generating...
                                         </>
                                     ) : (
                                         'Create Deck'
