@@ -86,9 +86,10 @@ export default function Decks(props) {
         }
 
         setLoading(true);
+        setErrors({...errors, submit: null});
 
         try {
-            // Create the deck using our API
+            // Create the deck using our API with AI-generated flashcards
             const result = await createDeck(
                 user.uid,
                 newDeckTitle,
@@ -106,7 +107,10 @@ export default function Decks(props) {
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error creating deck:', error);
-            setErrors({ ...errors, submit: 'Failed to create deck. Please try again.' });
+            setErrors({ 
+                ...errors, 
+                submit: 'Failed to create flashcards. Please check your content and try again.' 
+            });
         } finally {
             setLoading(false);
         }
@@ -175,19 +179,21 @@ export default function Decks(props) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {decks.map((deck) => (
                         <div key={deck._id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleStudyDeck(deck._id)}>
-                            <div className="h-36 overflow-hidden bg-gray-200">
-                                <img
-                                    src={`https://via.placeholder.com/300x200?text=${encodeURIComponent(deck.title)}`}
-                                    alt={deck.title}
-                                    className="w-full h-full object-cover"
-                                />
+                            <div className="h-36 overflow-hidden bg-gray-200 py-2 flex items-center justify-center">
+                                <div className = "bg-white p-4 rounded-lg flex flex-col justify-center items-center text-center w-1/2 h-full">
+                                    <p className="text-gray-600 text-sm">
+                                        {deck.cards ? deck.cards[0].question : deck.content.split(' ').slice(0, 10).join(' ')}...
+                                    </p>
+                                </div>
                             </div>
                             <div className="p-4">
                                 <div className="flex items-center mb-2">
                                     <div className={`h-4 w-4 rounded-full mr-2 ${getColorClass(deck.colour)}`}></div>
                                     <h3 className="text-xl font-semibold text-gray-800">{deck.title}</h3>
                                 </div>
-                                <p className="text-gray-600">{deck.num_cards} {deck.num_cards === 1 ? 'card' : 'cards'}</p>
+                                <p className="text-gray-600">
+                                    {deck.cards ? deck.cards.length : deck.num_cards} {(deck.cards ? deck.cards.length : deck.num_cards) === 1 ? 'card' : 'cards'}
+                                </p>
                                 <p className="text-xs text-gray-500 mt-1">Created: {new Date(deck.created_at).toLocaleDateString()}</p>
                                 <button
                                     className="p-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full transition duration-300"
@@ -360,10 +366,10 @@ export default function Decks(props) {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Generating...
+                                            Generating AI Flashcards...
                                         </>
                                     ) : (
-                                        'Create Deck'
+                                        'Create Flashcards'
                                     )}
                                 </button>
                             </div>

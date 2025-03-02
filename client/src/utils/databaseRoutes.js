@@ -57,12 +57,12 @@ export const deleteUser = async (userID) => {
 };
 
 /**
- * Creates a new deck for a user
+ * Creates a new deck with AI-generated flashcards for a user
  * @param {string} userID - The unique identifier for the user
  * @param {string} title - The title of the deck
  * @param {string} colour - The color/theme of the deck
- * @param {number} num_cards - The number of cards in the deck
- * @param {string} content - The content of the deck
+ * @param {number} num_cards - The number of cards to generate
+ * @param {string} content - The content to use for generating flashcards
  * @returns {Promise<Object>} - Response with the created deck data
  */
 export const createDeck = async (userID, title, colour, num_cards, content) => {

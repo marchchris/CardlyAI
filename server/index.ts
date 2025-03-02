@@ -1,10 +1,12 @@
 import express, { Express, Request, Response, Application } from 'express';
 import dotenv from 'dotenv';
 import { ObjectId } from 'mongodb';
+import { Card, Deck, User } from './types';
+import { generateFlashcards } from './services/aiService';
 
 dotenv.config();
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT;
 
 const app: Application = express();
 
@@ -24,22 +26,6 @@ const client = new MongoClient(uri, {
   }
 });
 
-// Define User interface
-interface User {
-  userID: string;
-  decks: Deck[];
-}
-
-// Define Deck interface
-interface Deck {
-  _id?: ObjectId;
-  title: string;
-  colour: string;
-  num_cards: number;
-  content: string;
-  created_at: Date;
-}
-
 // Connect to MongoDB once at startup
 let database: any;
 
@@ -57,7 +43,7 @@ async function connectToDatabase() {
 // Create User route
 app.post('/api/createUser', async (req: Request, res: Response) => {
   try {
-    const { userID }: {userID: string} = req.body;
+    const { userID }: { userID: string } = req.body;
 
     if (!userID || typeof userID !== 'string') {
       res.status(400).json({ error: 'Valid userID is required' });
@@ -92,7 +78,7 @@ app.post('/api/createUser', async (req: Request, res: Response) => {
 // Delete User route
 app.delete('/api/deleteUser', async (req: Request, res: Response) => {
   try {
-    const { userID }: {userID: string}  = req.body;
+    const { userID }: { userID: string } = req.body;
 
     if (!userID || typeof userID !== 'string') {
       res.status(400).json({ error: 'Valid userID is required' });
@@ -120,7 +106,7 @@ app.delete('/api/deleteUser', async (req: Request, res: Response) => {
   }
 });
 
-// Create Deck route
+// Create Deck route with ChatGPT integration
 app.post('/api/createDeck', async (req: Request, res: Response) => {
   try {
     const { userID, title, colour, num_cards, content }: {
@@ -160,30 +146,38 @@ app.post('/api/createDeck', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'User not found' });
     }
 
-    // Create new deck object
-    const newDeck: Deck = {
-      _id: new ObjectId(),
-      title,
-      colour,
-      num_cards,
-      content,
-      created_at: new Date()
-    };
+    try {
+      // Generate flashcards using the AI service
+      const cards = await generateFlashcards(content, num_cards);
 
-    // Add deck to user's decks array
-    const result = await usersCollection.updateOne(
-      { userID },
-      { $push: { decks: newDeck } }
-    );
+      // Create new deck object with the generated cards
+      const newDeck: Deck = {
+        _id: new ObjectId(),
+        title,
+        colour,
+        num_cards,
+        cards,
+        created_at: new Date()
+      };
 
-    if (result.modifiedCount === 0) {
-      res.status(500).json({ error: 'Failed to add deck to user' });
+      // Add deck to user's decks array
+      const result = await usersCollection.updateOne(
+        { userID },
+        { $push: { decks: newDeck } }
+      );
+
+      if (result.modifiedCount === 0) {
+        res.status(500).json({ error: 'Failed to add deck to user' });
+      }
+
+      res.status(201).json({
+        message: 'Deck created successfully',
+        deck: newDeck
+      });
+    } catch (aiError) {
+      console.error("AI Service error:", aiError);
+      res.status(500).json({ error: 'Failed to generate flashcards' });
     }
-
-    res.status(201).json({
-      message: 'Deck created successfully',
-      deck: newDeck
-    });
   } catch (error) {
     console.error('Error creating deck:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -203,7 +197,7 @@ app.get('/api/getUserDecks/:userID', async (req: Request, res: Response) => {
 
     // Find the user by ID
     const user = await usersCollection.findOne({ userID });
-    
+
     if (!user) {
       res.status(404).json({ error: 'User not found' });
     }
