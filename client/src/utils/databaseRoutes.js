@@ -120,3 +120,123 @@ export const getUserDecks = async (userID) => {
     throw error;
   }
 };
+
+/**
+ * Retrieves a specific deck by its ID
+ * @param {string} userID - The unique identifier for the user
+ * @param {string} deckID - The unique identifier for the deck
+ * @returns {Promise<Object>} - The deck object
+ */
+export const getDeckById = async (userID, deckID) => {
+  try {
+    const response = await fetch(`${API_URL}/api/getDeck/${userID}/${deckID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to retrieve deck');
+    }
+    
+    return data.deck;
+  } catch (error) {
+    console.error('Error retrieving deck:', error);
+    throw error;
+  }
+};
+
+/**
+ * Edits an existing card in a deck
+ * @param {string} userID - The unique identifier for the user
+ * @param {string} deckID - The unique identifier for the deck
+ * @param {number} cardIndex - The index of the card to edit
+ * @param {string} question - The updated question text
+ * @param {string} answer - The updated answer text
+ * @returns {Promise<Object>} - The updated card and deck
+ */
+export const editCard = async (userID, deckID, cardIndex, question, answer) => {
+  try {
+    const response = await fetch(`${API_URL}/api/card/${userID}/${deckID}/${cardIndex}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question, answer }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to update card');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error editing card:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deletes a card from a deck
+ * @param {string} userID - The unique identifier for the user
+ * @param {string} deckID - The unique identifier for the deck
+ * @param {number} cardIndex - The index of the card to delete
+ * @returns {Promise<Object>} - The updated deck
+ */
+export const deleteCard = async (userID, deckID, cardIndex) => {
+  try {
+    const response = await fetch(`${API_URL}/api/card/${userID}/${deckID}/${cardIndex}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to delete card');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error deleting card:', error);
+    throw error;
+  }
+};
+
+/**
+ * Adds a new card to a deck
+ * @param {string} userID - The unique identifier for the user
+ * @param {string} deckID - The unique identifier for the deck
+ * @param {string} question - The question text for the new card
+ * @param {string} answer - The answer text for the new card
+ * @returns {Promise<Object>} - The new card and updated deck
+ */
+export const addCard = async (userID, deckID, question, answer) => {
+  try {
+    const response = await fetch(`${API_URL}/api/card/${userID}/${deckID}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question, answer }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to add card');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error adding card:', error);
+    throw error;
+  }
+};

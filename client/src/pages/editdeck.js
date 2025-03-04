@@ -1,0 +1,479 @@
+import { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import Navbar from "../components/navbar";
+import { getDeckById, editCard, deleteCard, addCard } from '../utils/databaseRoutes';
+import { FaPlus, FaEdit, FaTrashAlt, FaSave, FaTimes, FaCheck } from "react-icons/fa";
+
+import { AuthContext } from "../config/AuthProvider";
+import Loading from '../components/loadingScreen';
+
+export default function EditDeck() {
+    const { user } = useContext(AuthContext);
+    const { deckID } = useParams();
+    const navigate = useNavigate();
+    const [deck, setDeck] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [cardBeingEdited, setCardBeingEdited] = useState(null);
+    const [originalCardData, setOriginalCardData] = useState(null); // Store original card data to detect changes
+    const [addingNewCard, setAddingNewCard] = useState(false);
+    const [newCardData, setNewCardData] = useState({ question: '', answer: '' });
+    const [savingChanges, setSavingChanges] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Fetch the deck when component mounts
+    useEffect(() => {
+        const fetchDeck = async () => {
+            if (!user) return;
+
+            setLoading(true);
+            try {
+                const deckData = await getDeckById(user.uid, deckID);
+                setDeck(deckData);
+                setError(null);
+            } catch (err) {
+                console.error("Error fetching deck:", err);
+                setError("Failed to load deck. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDeck();
+    }, [deckID, user]);
+
+
+    const handleEditClick = (index) => {
+        const originalCard = deck.cards[index];
+        setOriginalCardData({
+            question: originalCard.question,
+            answer: originalCard.answer
+        });
+
+        setCardBeingEdited({
+            index,
+            question: originalCard.question,
+            answer: originalCard.answer
+        });
+        setAddingNewCard(false);
+    };
+
+    const handleCancelEdit = () => {
+        setCardBeingEdited(null);
+        setOriginalCardData(null);
+        setSuccess(null);
+        setError(null);
+    };
+
+    // Check if the card has actually been modified
+    const isCardModified = () => {
+        if (!cardBeingEdited || !originalCardData) return false;
+
+        return cardBeingEdited.question.trim() !== originalCardData.question.trim() ||
+            cardBeingEdited.answer.trim() !== originalCardData.answer.trim();
+    };
+
+    const handleSaveEdit = async () => {
+        if (!cardBeingEdited) return;
+
+        // Check if the card has been modified
+        if (!isCardModified()) {
+            setError("No changes were made to the card");
+            return;
+        }
+
+        try {
+            const result = await editCard(
+                user.uid,
+                deckID,
+                cardBeingEdited.index,
+                cardBeingEdited.question,
+                cardBeingEdited.answer
+            );
+
+            // Update local state with edited card
+            const updatedCards = [...deck.cards];
+            updatedCards[cardBeingEdited.index] = {
+                question: cardBeingEdited.question,
+                answer: cardBeingEdited.answer
+            };
+
+            setDeck({ ...deck, cards: updatedCards });
+            setSuccess("Card updated successfully");
+            setError(null);
+            setCardBeingEdited(null);
+            setOriginalCardData(null);
+        } catch (err) {
+            console.error("Error updating card:", err);
+            setError("Failed to update card. Please try again.");
+            setSuccess(null);
+        }
+    };
+
+    const handleDeleteClick = async (index) => {
+        if (!window.confirm("Are you sure you want to delete this card?")) {
+            return;
+        }
+
+        try {
+            await deleteCard(user.uid, deckID, index);
+
+            // Update local state by removing card
+            const updatedCards = deck.cards.filter((_, i) => i !== index);
+            setDeck({ ...deck, cards: updatedCards, num_cards: updatedCards.length });
+            setSuccess("Card deleted successfully");
+            setError(null);
+        } catch (err) {
+            console.error("Error deleting card:", err);
+            setError("Failed to delete card. Please try again.");
+            setSuccess(null);
+        }
+    };
+
+    const handleAddCardClick = () => {
+        setAddingNewCard(true);
+        setNewCardData({ question: '', answer: '' });
+        setCardBeingEdited(null);
+    };
+
+    const handleSaveNewCard = async () => {
+        if (!newCardData.question.trim() || !newCardData.answer.trim()) {
+            setError("Both question and answer are required");
+            return;
+        }
+
+        try {
+            const result = await addCard(
+                user.uid,
+                deckID,
+                newCardData.question,
+                newCardData.answer
+            );
+
+            // Update local state with new card at the TOP of the list
+            const updatedCards = [
+                {
+                    question: newCardData.question,
+                    answer: newCardData.answer
+                },
+                ...deck.cards
+            ];
+
+            setDeck({ ...deck, cards: updatedCards, num_cards: updatedCards.length });
+            setSuccess("New card added successfully");
+            setError(null);
+            setAddingNewCard(false);
+            setNewCardData({ question: '', answer: '' });
+        } catch (err) {
+            console.error("Error adding new card:", err);
+            setError("Failed to add new card. Please try again.");
+            setSuccess(null);
+        }
+    };
+
+    const handleCancelNewCard = () => {
+        setAddingNewCard(false);
+        setNewCardData({ question: '', answer: '' });
+        setSuccess(null);
+        setError(null);
+    };
+
+    const handleSaveAllChanges = () => {
+        // All changes are saved immediately in this implementation
+        // This is just a confirmation for the user
+        setSavingChanges(true);
+        setTimeout(() => {
+            setSavingChanges(false);
+            setSuccess("All changes saved successfully");
+        }, 800);
+    };
+
+    const handleInputChange = (field, value) => {
+        if (cardBeingEdited !== null) {
+            setCardBeingEdited({ ...cardBeingEdited, [field]: value });
+        } else if (addingNewCard) {
+            setNewCardData({ ...newCardData, [field]: value });
+        }
+    };
+
+    function getColorClass(color) {
+        switch (color) {
+            case 'red': return 'bg-red-500';
+            case 'green': return 'bg-green-500';
+            case 'blue': return 'bg-blue-500';
+            case 'yellow': return 'bg-yellow-500';
+            case 'purple': return 'bg-purple-500';
+            default: return 'bg-gray-500';
+        }
+    }
+
+    if (loading) {
+        return (
+            <Loading />
+        );
+    }
+
+    if (error && !deck) {
+        return (
+            <>
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                    <div className="bg-red-100 p-4 rounded-lg mb-6">
+                        <p className="text-red-700">{error}</p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
+                    >
+                        Return to Dashboard
+                    </button>
+                </div>
+            </>
+        );
+    }
+
+    if (!deck) {
+        return (
+            <>
+                <Navbar />
+                <div className="container mx-auto px-4 py-8">
+                    <p>Deck not found.</p>
+                </div>
+            </>
+        );
+    }
+
+    return (
+        <>
+            <Navbar />
+            <div className="container mx-auto px-4 py-8 mt-20">
+
+
+                {success && (
+                    <div className="bg-green-100 p-4 rounded-lg mb-6 flex items-center justify-between">
+                        <p className="text-green-700 flex items-center">
+                            <FaCheck className="mr-2" /> {success}
+                        </p>
+                        <button
+                            onClick={() => setSuccess(null)}
+                            className="text-green-700 hover:text-green-900"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="bg-red-100 p-4 rounded-lg mb-6 flex items-center justify-between">
+                        <p className="text-red-700">{error}</p>
+                        <button
+                            onClick={() => setError(null)}
+                            className="text-red-700 hover:text-red-900"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                )}
+
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="p-4 bg-gray-50 border-b flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-gray-700">Flashcards ({deck.cards.length})</h2>
+                        <button
+                            onClick={handleAddCardClick}
+                            disabled={addingNewCard || cardBeingEdited !== null}
+                            className={`bg-blue-600 text-white px-3 py-1 rounded text-sm flex items-center transition duration-200 ${addingNewCard || cardBeingEdited !== null ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+                                }`}
+                        >
+                            <FaPlus className="mr-1" /> Add New Card
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 w-full">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">#</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-5/12">Question</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-5/12">Answer</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {/* New card form row - now at the top */}
+                                {addingNewCard && (
+                                    <tr className="bg-blue-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-500">New</td>
+                                        <td className="px-6 py-4">
+                                            <textarea
+                                                value={newCardData.question}
+                                                onChange={(e) => handleInputChange('question', e.target.value)}
+                                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                                                rows="3"
+                                                placeholder="Enter question"
+                                            ></textarea>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <textarea
+                                                value={newCardData.answer}
+                                                onChange={(e) => handleInputChange('answer', e.target.value)}
+                                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                                                rows="3"
+                                                placeholder="Enter answer"
+                                            ></textarea>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button
+                                                onClick={handleSaveNewCard}
+                                                className="text-green-600 hover:text-green-900 mr-3"
+                                                disabled={!newCardData.question.trim() || !newCardData.answer.trim()}
+                                            >
+                                                <FaCheck />
+                                            </button>
+                                            <button
+                                                onClick={handleCancelNewCard}
+                                                className="text-red-600 hover:text-red-900"
+                                            >
+                                                <FaTimes />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )}
+
+                                {deck.cards.map((card, index) => (
+                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                        {cardBeingEdited && cardBeingEdited.index === index ? (
+                                            // Edit mode
+                                            <>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                                                <td className="px-6 py-4">
+                                                    <textarea
+                                                        value={cardBeingEdited.question}
+                                                        onChange={(e) => handleInputChange('question', e.target.value)}
+                                                        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                                                        rows="3"
+                                                        placeholder="Enter question"
+                                                    ></textarea>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <textarea
+                                                        value={cardBeingEdited.answer}
+                                                        onChange={(e) => handleInputChange('answer', e.target.value)}
+                                                        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                                                        rows="3"
+                                                        placeholder="Enter answer"
+                                                    ></textarea>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <button
+                                                        onClick={handleSaveEdit}
+                                                        className={`text-green-600 hover:text-green-900 mr-3 ${!isCardModified() ||
+                                                                !cardBeingEdited.question.trim() ||
+                                                                !cardBeingEdited.answer.trim()
+                                                                ? 'opacity-50 cursor-not-allowed'
+                                                                : ''
+                                                            }`}
+                                                        disabled={
+                                                            !isCardModified() ||
+                                                            !cardBeingEdited.question.trim() ||
+                                                            !cardBeingEdited.answer.trim()
+                                                        }
+                                                        title={!isCardModified() ? "No changes made" : "Save changes"}
+                                                    >
+                                                        <FaCheck />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        <FaTimes />
+                                                    </button>
+                                                </td>
+                                            </>
+                                        ) : (
+                                            // View mode
+                                            <>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">{card.question}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">{card.answer}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"></td>
+                                                <button
+                                                    onClick={() => handleEditClick(index)}
+                                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                                    disabled={cardBeingEdited !== null || addingNewCard}
+                                                >
+                                                    <FaEdit />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(index)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                    disabled={cardBeingEdited !== null || addingNewCard}
+                                                >
+                                                    <FaTrashAlt />
+                                                </button>
+                                            </>
+                                        )}
+                                    </tr>
+                                ))}
+
+                                {/* New card form row */}
+                                {addingNewCard && (
+                                    <tr className="bg-blue-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-500">New</td>
+                                        <td className="px-6 py-4">
+                                            <textarea
+                                                value={newCardData.question}
+                                                onChange={(e) => handleInputChange('question', e.target.value)}
+                                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                                                rows="3"
+                                                placeholder="Enter question"
+                                            ></textarea>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <textarea
+                                                value={newCardData.answer}
+                                                onChange={(e) => handleInputChange('answer', e.target.value)}
+                                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                                                rows="3"
+                                                placeholder="Enter answer"
+                                            ></textarea>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button
+                                                onClick={handleSaveNewCard}
+                                                className="text-green-600 hover:text-green-900 mr-3"
+                                                disabled={!newCardData.question.trim() || !newCardData.answer.trim()}
+                                            >
+                                                <FaCheck />
+                                            </button>
+                                            <button
+                                                onClick={handleCancelNewCard}
+                                                className="text-red-600 hover:text-red-900"
+                                            >
+                                                <FaTimes />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div >
+
+                    {
+                        deck.cards.length === 0 && !addingNewCard && (
+                            <div className="p-8 text-center">
+                                <p className="text-gray-500 mb-4">This deck has no flashcards.</p>
+                                <button
+                                    onClick={handleAddCardClick}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
+                                >
+                                    <FaPlus className="inline mr-2" /> Add Your First Card
+                                </button>
+                            </div>
+                        )
+                    }
+                </div >
+            </div >
+        </>
+    );
+}

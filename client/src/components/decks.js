@@ -181,9 +181,7 @@ export default function Decks(props) {
     const handleEditDeck = (deckId, e) => {
         e.stopPropagation();
         setOpenDropdownId(null);
-        // Navigate to edit page or open edit modal
-        console.log('Edit deck', deckId);
-        // You would implement the edit functionality here
+        navigate(`/edit-deck/${deckId}`);
     };
 
     const handleDeleteDeck = (deckId, e) => {
@@ -243,13 +241,13 @@ export default function Decks(props) {
                                             style={{ top: '100%' }}
                                         >
                                             <button
-                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition duration-200"
                                                 onClick={(e) => handleEditDeck(deck._id, e)}
                                             >
                                                 <FaEdit className="mr-2" /> Edit
                                             </button>
                                             <button
-                                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center transition duration-200"
                                                 onClick={(e) => handleDeleteDeck(deck._id, e)}
                                             >
                                                 <FaTrashAlt className="mr-2" /> Delete

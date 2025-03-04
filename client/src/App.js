@@ -6,6 +6,7 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
 import StudyDeck from "./pages/studyDeck";
+import EditDeck from "./pages/editdeck";
 
 // Protected Routes
 import PrivateRoute from "./PrivateRoute";
@@ -22,6 +23,7 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="dashboard" element={<PrivateRoute><Dashboard/></PrivateRoute>} />
             <Route path="study/:deckId" element={<PrivateRoute><StudyDeck/></PrivateRoute>} />
+            <Route path = "edit-deck/:deckID" element = {<PrivateRoute><EditDeck/></PrivateRoute>} />
             <Route path="*" element={<h1>Not Found</h1>} />
           </Route>
         </Routes>
