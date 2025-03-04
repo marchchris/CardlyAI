@@ -1,8 +1,10 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from "../components/navbar";
 import { getDeckById, editCard, deleteCard, addCard } from '../utils/databaseRoutes';
-import { FaPlus, FaEdit, FaTrashAlt, FaSave, FaTimes, FaCheck } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrashAlt, FaSave, FaTimes, FaCheck, FaExclamationTriangle } from "react-icons/fa";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FaArrowLeft } from 'react-icons/fa';
 
 import { AuthContext } from "../config/AuthProvider";
 import Loading from '../components/loadingScreen';
@@ -16,11 +18,30 @@ export default function EditDeck() {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [cardBeingEdited, setCardBeingEdited] = useState(null);
-    const [originalCardData, setOriginalCardData] = useState(null); // Store original card data to detect changes
+    const [originalCardData, setOriginalCardData] = useState(null);
     const [addingNewCard, setAddingNewCard] = useState(false);
     const [newCardData, setNewCardData] = useState({ question: '', answer: '' });
     const [savingChanges, setSavingChanges] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState(null);
+    const [deletingCardIndex, setDeletingCardIndex] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    const dropdownRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Fetch the deck when component mounts
     useEffect(() => {
@@ -43,8 +64,15 @@ export default function EditDeck() {
         fetchDeck();
     }, [deckID, user]);
 
+    const toggleDropdown = (index, e) => {
+        e.stopPropagation();
+        setActiveDropdown(activeDropdown === index ? null : index);
+    };
 
-    const handleEditClick = (index) => {
+    const handleEditClick = (index, e) => {
+        if (e) e.stopPropagation();
+        setActiveDropdown(null);
+
         const originalCard = deck.cards[index];
         setOriginalCardData({
             question: originalCard.question,
@@ -57,6 +85,42 @@ export default function EditDeck() {
             answer: originalCard.answer
         });
         setAddingNewCard(false);
+    };
+
+    const handleDeleteClick = (index, e) => {
+        if (e) e.stopPropagation();
+        setActiveDropdown(null);
+
+        // Instead of showing window.confirm, set up the modal
+        setDeletingCardIndex(index);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteCard = async () => {
+        if (deletingCardIndex === null) return;
+
+        try {
+            await deleteCard(user.uid, deckID, deletingCardIndex);
+
+            // Update local state by removing card
+            const updatedCards = deck.cards.filter((_, i) => i !== deletingCardIndex);
+            setDeck({ ...deck, cards: updatedCards, num_cards: updatedCards.length });
+            setSuccess("Card deleted successfully");
+            setError(null);
+        } catch (err) {
+            console.error("Error deleting card:", err);
+            setError("Failed to delete card. Please try again.");
+            setSuccess(null);
+        }
+
+        // Close the modal and reset
+        setShowDeleteModal(false);
+        setDeletingCardIndex(null);
+    };
+
+    const cancelDeleteCard = () => {
+        setShowDeleteModal(false);
+        setDeletingCardIndex(null);
     };
 
     const handleCancelEdit = () => {
@@ -111,26 +175,6 @@ export default function EditDeck() {
         }
     };
 
-    const handleDeleteClick = async (index) => {
-        if (!window.confirm("Are you sure you want to delete this card?")) {
-            return;
-        }
-
-        try {
-            await deleteCard(user.uid, deckID, index);
-
-            // Update local state by removing card
-            const updatedCards = deck.cards.filter((_, i) => i !== index);
-            setDeck({ ...deck, cards: updatedCards, num_cards: updatedCards.length });
-            setSuccess("Card deleted successfully");
-            setError(null);
-        } catch (err) {
-            console.error("Error deleting card:", err);
-            setError("Failed to delete card. Please try again.");
-            setSuccess(null);
-        }
-    };
-
     const handleAddCardClick = () => {
         setAddingNewCard(true);
         setNewCardData({ question: '', answer: '' });
@@ -179,22 +223,16 @@ export default function EditDeck() {
         setError(null);
     };
 
-    const handleSaveAllChanges = () => {
-        // All changes are saved immediately in this implementation
-        // This is just a confirmation for the user
-        setSavingChanges(true);
-        setTimeout(() => {
-            setSavingChanges(false);
-            setSuccess("All changes saved successfully");
-        }, 800);
-    };
-
     const handleInputChange = (field, value) => {
         if (cardBeingEdited !== null) {
             setCardBeingEdited({ ...cardBeingEdited, [field]: value });
         } else if (addingNewCard) {
             setNewCardData({ ...newCardData, [field]: value });
         }
+    };
+
+    const handleBackToDashboard = () => {
+        navigate('/dashboard');
     };
 
     function getColorClass(color) {
@@ -247,7 +285,7 @@ export default function EditDeck() {
     return (
         <>
             <Navbar />
-            <div className="container mx-auto px-4 py-8 mt-20">
+            <div className="container mx-auto px-4 py-8 mt-20 flex justify-center flex-col w-5/6">
 
 
                 {success && (
@@ -275,18 +313,28 @@ export default function EditDeck() {
                         </button>
                     </div>
                 )}
-
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={handleBackToDashboard}
+                        className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-300"
+                    >
+                        <FaArrowLeft className="mr-4" /> Back to Deck List
+                    </button>
+                </div>
+                
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden p-4">
                     <div className="p-4 bg-gray-50 border-b flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-gray-700">Flashcards ({deck.cards.length})</h2>
                         <button
                             onClick={handleAddCardClick}
                             disabled={addingNewCard || cardBeingEdited !== null}
-                            className={`bg-blue-600 text-white px-3 py-1 rounded text-sm flex items-center transition duration-200 ${addingNewCard || cardBeingEdited !== null ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
-                                }`}
+                            className={`bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center transition duration-200 ${addingNewCard || cardBeingEdited !== null ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
                         >
                             <FaPlus className="mr-1" /> Add New Card
                         </button>
+
+
                     </div>
 
                     <div className="overflow-x-auto">
@@ -368,10 +416,10 @@ export default function EditDeck() {
                                                     <button
                                                         onClick={handleSaveEdit}
                                                         className={`text-green-600 hover:text-green-900 mr-3 ${!isCardModified() ||
-                                                                !cardBeingEdited.question.trim() ||
-                                                                !cardBeingEdited.answer.trim()
-                                                                ? 'opacity-50 cursor-not-allowed'
-                                                                : ''
+                                                            !cardBeingEdited.question.trim() ||
+                                                            !cardBeingEdited.answer.trim()
+                                                            ? 'opacity-50 cursor-not-allowed'
+                                                            : ''
                                                             }`}
                                                         disabled={
                                                             !isCardModified() ||
@@ -396,21 +444,36 @@ export default function EditDeck() {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
                                                 <td className="px-6 py-4 text-sm text-gray-900">{card.question}</td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">{card.answer}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"></td>
-                                                <button
-                                                    onClick={() => handleEditClick(index)}
-                                                    className="text-blue-600 hover:text-blue-900 mr-3"
-                                                    disabled={cardBeingEdited !== null || addingNewCard}
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteClick(index)}
-                                                    className="text-red-600 hover:text-red-900"
-                                                    disabled={cardBeingEdited !== null || addingNewCard}
-                                                >
-                                                    <FaTrashAlt />
-                                                </button>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                                                    <button
+                                                        onClick={(e) => toggleDropdown(index, e)}
+                                                        className="text-gray-500 hover:text-gray-800 transition duration-200"
+                                                        disabled={cardBeingEdited !== null || addingNewCard}
+                                                    >
+                                                        <BsThreeDotsVertical />
+                                                    </button>
+
+                                                    {activeDropdown === index && (
+                                                        <div
+                                                            ref={dropdownRef}
+                                                            className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-lg z-10 py-1"
+                                                            style={{ top: '100%' }}
+                                                        >
+                                                            <button
+                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition duration-200"
+                                                                onClick={(e) => handleEditClick(index, e)}
+                                                            >
+                                                                <FaEdit className="mr-2" /> Edit
+                                                            </button>
+                                                            <button
+                                                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center transition duration-200"
+                                                                onClick={(e) => handleDeleteClick(index, e)}
+                                                            >
+                                                                <FaTrashAlt className="mr-2" /> Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </td>
                                             </>
                                         )}
                                     </tr>
@@ -474,6 +537,37 @@ export default function EditDeck() {
                     }
                 </div >
             </div >
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="p-6">
+                            <div className="flex items-center justify-center mb-4 text-red-600">
+                                <FaExclamationTriangle className="h-12 w-12" />
+                            </div>
+                            <h3 className="text-xl font-bold text-center mb-2">Delete Card</h3>
+                            <p className="text-gray-600 text-center mb-6">
+                                Are you sure you want to delete this flashcard? This action cannot be undone.
+                            </p>
+                            <div className="flex justify-center space-x-4">
+                                <button
+                                    onClick={cancelDeleteCard}
+                                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline duration-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDeleteCard}
+                                    className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300"
+                                >
+                                    <FaTrashAlt className="mr-2" /> Delete Card
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

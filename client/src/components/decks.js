@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaPlus, FaEdit, FaTrashAlt } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrashAlt, FaExclamationTriangle } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { getUserDecks, createDeck } from '../utils/databaseRoutes';
 
 import { BsThreeDotsVertical } from "react-icons/bs";
+import Loading from './loadingScreen';
 
 export default function Decks(props) {
     const user = props.user;
@@ -18,6 +19,8 @@ export default function Decks(props) {
     const [loadingDecks, setLoadingDecks] = useState(true);
     const [errors, setErrors] = useState({});
     const [openDropdownId, setOpenDropdownId] = useState(null);
+    const [deletingDeckId, setDeletingDeckId] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Change from word count to character count
     const MIN_CHARS = 300;
@@ -187,14 +190,32 @@ export default function Decks(props) {
     const handleDeleteDeck = (deckId, e) => {
         e.stopPropagation();
         setOpenDropdownId(null);
-        // Show confirmation and delete deck
-        if (window.confirm('Are you sure you want to delete this deck?')) {
-            console.log('Delete deck', deckId);
-            // You would implement the delete functionality here
-            // After deletion, update the decks state
-            setDecks(decks.filter(deck => deck._id !== deckId));
-        }
+        // Open the delete confirmation modal instead of using window.confirm
+        setDeletingDeckId(deckId);
+        setShowDeleteModal(true);
     };
+    
+    const confirmDeleteDeck = () => {
+        if (!deletingDeckId) return;
+        
+        // Implementation of deck deletion
+        console.log('Delete deck', deletingDeckId);
+        // After deletion, update the decks state
+        setDecks(decks.filter(deck => deck._id !== deletingDeckId));
+        
+        // Close the modal and reset the deletingDeckId
+        setShowDeleteModal(false);
+        setDeletingDeckId(null);
+    };
+    
+    const cancelDeleteDeck = () => {
+        setShowDeleteModal(false);
+        setDeletingDeckId(null);
+    };
+
+    if (loadingDecks) {
+        return <Loading />;
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -257,10 +278,10 @@ export default function Decks(props) {
                                 </div>
                                 <div className="flex items-center mb-2">
                                     <div className={`h-4 w-4 rounded-full mr-2 ${getColorClass(deck.colour)}`}></div>
-                                    <h3 className="text-xl font-semibold text-gray-800">{deck.title}</h3>
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-1">{deck.title}</h3>
                                 </div>
                                 <p className="text-gray-600">
-                                    {deck.cards ? deck.cards.length : deck.num_cards} {(deck.cards ? deck.cards.length : deck.num_cards) === 1 ? 'card' : 'cards'}
+                                    {deck.cards ? deck.cards.length : deck.num_cards} {(deck.cards ? deck.cards.length : deck.num_cards) === 1 ? 'Card' : 'Cards'}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">Created: {new Date(deck.created_at).toLocaleDateString()}</p>
                                 <button
@@ -287,6 +308,37 @@ export default function Decks(props) {
                             </div>
                             <h3 className="text-xl font-semibold text-gray-800 mb-2">Create New Deck</h3>
                             <p className="text-gray-500 text-sm">Add more flashcards to study</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="p-6">
+                            <div className="flex items-center justify-center mb-4 text-red-600">
+                                <FaExclamationTriangle className="h-12 w-12" />
+                            </div>
+                            <h3 className="text-xl font-bold text-center mb-2">Delete Deck</h3>
+                            <p className="text-gray-600 text-center mb-6">
+                                Are you sure you want to delete this deck? This action cannot be undone and all flashcards will be permanently lost.
+                            </p>
+                            <div className="flex justify-center space-x-4">
+                                <button
+                                    onClick={cancelDeleteDeck}
+                                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline duration-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDeleteDeck}
+                                    className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300"
+                                >
+                                    <FaTrashAlt className="mr-2" /> Delete Deck
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -411,14 +463,14 @@ export default function Decks(props) {
                             <div className="flex justify-end">
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="mr-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline duration-300"
+                                    className="mr-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline duration-300 font-medium"
                                     type="button"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleCreateDeck}
-                                    className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300 ${charCount < MIN_CHARS || charCount > MAX_CHARS ? 'opacity-50 cursor-not-allowed' : ''
+                                    className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300 ${charCount < MIN_CHARS || charCount > MAX_CHARS ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
                                     type="button"
                                     disabled={loading || charCount < MIN_CHARS || charCount > MAX_CHARS}
