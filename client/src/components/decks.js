@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { getUserDecks, createDeck } from '../utils/databaseRoutes';
+
+import { BsThreeDotsVertical } from "react-icons/bs";
 
 export default function Decks(props) {
     const user = props.user;
@@ -15,6 +17,7 @@ export default function Decks(props) {
     const [loading, setLoading] = useState(false);
     const [loadingDecks, setLoadingDecks] = useState(true);
     const [errors, setErrors] = useState({});
+    const [openDropdownId, setOpenDropdownId] = useState(null);
 
     // Change from word count to character count
     const MIN_CHARS = 300;
@@ -23,6 +26,21 @@ export default function Decks(props) {
     const MAX_CARDS = 50;
 
     const textareaRef = useRef(null);
+    const dropdownRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpenDropdownId(null);
+            }
+        };
+        
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Fetch user's decks when component mounts or user changes
     useEffect(() => {
@@ -86,7 +104,7 @@ export default function Decks(props) {
         }
 
         setLoading(true);
-        setErrors({...errors, submit: null});
+        setErrors({ ...errors, submit: null });
 
         try {
             // Create the deck using our API with AI-generated flashcards
@@ -102,14 +120,14 @@ export default function Decks(props) {
             if (result && result.deck) {
                 setDecks(prevDecks => [...prevDecks, result.deck]);
             }
-            
+
             resetForm();
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error creating deck:', error);
-            setErrors({ 
-                ...errors, 
-                submit: 'Failed to create flashcards. Please check your content and try again.' 
+            setErrors({
+                ...errors,
+                submit: 'Failed to create flashcards. Please check your content and try again.'
             });
         } finally {
             setLoading(false);
@@ -155,6 +173,31 @@ export default function Decks(props) {
         return null;
     };
 
+    const toggleDropdown = (deckId, e) => {
+        e.stopPropagation();
+        setOpenDropdownId(openDropdownId === deckId ? null : deckId);
+    };
+
+    const handleEditDeck = (deckId, e) => {
+        e.stopPropagation();
+        setOpenDropdownId(null);
+        // Navigate to edit page or open edit modal
+        console.log('Edit deck', deckId);
+        // You would implement the edit functionality here
+    };
+
+    const handleDeleteDeck = (deckId, e) => {
+        e.stopPropagation();
+        setOpenDropdownId(null);
+        // Show confirmation and delete deck
+        if (window.confirm('Are you sure you want to delete this deck?')) {
+            console.log('Delete deck', deckId);
+            // You would implement the delete functionality here
+            // After deletion, update the decks state
+            setDecks(decks.filter(deck => deck._id !== deckId));
+        }
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
             {loadingDecks ? (
@@ -180,13 +223,40 @@ export default function Decks(props) {
                     {decks.map((deck) => (
                         <div key={deck._id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleStudyDeck(deck._id)}>
                             <div className="h-36 overflow-hidden bg-gray-200 py-2 flex items-center justify-center">
-                                <div className = "bg-white p-4 rounded-lg flex flex-col justify-center items-center text-center w-1/2 h-full">
+                                <div className="bg-white p-4 rounded-lg flex flex-col justify-center items-center text-center w-1/2 h-full">
                                     <p className="text-gray-600 text-sm">
                                         {deck.cards ? deck.cards[0].question : deck.content.split(' ').slice(0, 10).join(' ')}...
                                     </p>
                                 </div>
                             </div>
                             <div className="p-4">
+                                <div className="relative">
+                                    <BsThreeDotsVertical 
+                                        className="text-gray-500 hover:text-black transition duration-200 text-xl float-right cursor-pointer" 
+                                        onClick={(e) => toggleDropdown(deck._id, e)} 
+                                    />
+                                    
+                                    {openDropdownId === deck._id && (
+                                        <div 
+                                            ref={dropdownRef}
+                                            className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1"
+                                            style={{ top: '100%' }}
+                                        >
+                                            <button
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                                onClick={(e) => handleEditDeck(deck._id, e)}
+                                            >
+                                                <FaEdit className="mr-2" /> Edit
+                                            </button>
+                                            <button
+                                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                                                onClick={(e) => handleDeleteDeck(deck._id, e)}
+                                            >
+                                                <FaTrashAlt className="mr-2" /> Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex items-center mb-2">
                                     <div className={`h-4 w-4 rounded-full mr-2 ${getColorClass(deck.colour)}`}></div>
                                     <h3 className="text-xl font-semibold text-gray-800">{deck.title}</h3>
@@ -231,20 +301,20 @@ export default function Decks(props) {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold text-gray-800">Create New Deck</h2>
-                                <button 
+                                <button
                                     onClick={() => setIsModalOpen(false)}
                                     className="text-gray-500 hover:text-gray-700"
                                 >
                                     ✕
                                 </button>
                             </div>
-                            
+
                             {errors.submit && (
                                 <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
                                     {errors.submit}
                                 </div>
                             )}
-                            
+
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="deckTitle">
                                     Deck Title
@@ -254,9 +324,8 @@ export default function Decks(props) {
                                     type="text"
                                     value={newDeckTitle}
                                     onChange={(e) => setNewDeckTitle(e.target.value)}
-                                    className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                                        errors.title ? 'border-red-500' : ''
-                                    }`}
+                                    className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${errors.title ? 'border-red-500' : ''
+                                        }`}
                                     placeholder="e.g., Biology 101"
                                     required
                                 />
@@ -264,7 +333,7 @@ export default function Decks(props) {
                                     <p className="text-red-500 text-xs italic mt-1">{errors.title}</p>
                                 )}
                             </div>
-                            
+
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="deckColor">
                                     Deck Color
@@ -275,15 +344,14 @@ export default function Decks(props) {
                                             key={color.value}
                                             type="button"
                                             onClick={() => setSelectedColor(color.value)}
-                                            className={`w-8 h-8 rounded-full ${getColorClass(color.value)} ${
-                                                selectedColor === color.value ? 'ring-2 ring-offset-2 ring-gray-500' : ''
-                                            }`}
+                                            className={`w-8 h-8 rounded-full ${getColorClass(color.value)} ${selectedColor === color.value ? 'ring-2 ring-offset-2 ring-gray-500' : ''
+                                                }`}
                                             title={color.name}
                                         />
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cardCount">
                                     Number of Cards to Create: <span className="font-normal">{cardCount}</span>
@@ -302,17 +370,16 @@ export default function Decks(props) {
                                     <span className="text-sm text-gray-500">{MAX_CARDS}</span>
                                 </div>
                             </div>
-                            
+
                             <div className="mb-6">
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="block text-gray-700 text-sm font-bold" htmlFor="deckContent">
                                         Paste Your Study Content
                                     </label>
-                                    <span className={`text-sm ${
-                                        charCount < MIN_CHARS || charCount > MAX_CHARS
-                                            ? 'text-red-500' 
+                                    <span className={`text-sm ${charCount < MIN_CHARS || charCount > MAX_CHARS
+                                            ? 'text-red-500'
                                             : 'text-gray-500'
-                                    }`}>
+                                        }`}>
                                         {charCount}/{MAX_CHARS} characters
                                     </span>
                                 </div>
@@ -321,21 +388,20 @@ export default function Decks(props) {
                                     ref={textareaRef}
                                     value={newDeckContent}
                                     onChange={handleContentChange}
-                                    className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                                        charCount < MIN_CHARS || charCount > MAX_CHARS ? 'border-red-500' : ''
-                                    }`}
+                                    className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${charCount < MIN_CHARS || charCount > MAX_CHARS ? 'border-red-500' : ''
+                                        }`}
                                     rows="10"
                                     placeholder={`Paste your notes, textbook content, or any study material here (minimum ${MIN_CHARS} characters)...`}
                                     required
                                 />
-                                
+
                                 {/* Display character count error message */}
                                 {(charCount < MIN_CHARS || charCount > MAX_CHARS) && (
                                     <p className="text-red-500 text-sm mt-2 font-medium">
                                         {getCharCountErrorMessage()}
                                     </p>
                                 )}
-                                
+
                                 {/* Only show this message when there's no error */}
                                 {!(charCount < MIN_CHARS || charCount > MAX_CHARS) && (
                                     <p className="text-sm text-gray-500 mt-2">
@@ -343,7 +409,7 @@ export default function Decks(props) {
                                     </p>
                                 )}
                             </div>
-                            
+
                             <div className="flex justify-end">
                                 <button
                                     onClick={() => setIsModalOpen(false)}
@@ -354,9 +420,8 @@ export default function Decks(props) {
                                 </button>
                                 <button
                                     onClick={handleCreateDeck}
-                                    className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300 ${
-                                        charCount < MIN_CHARS || charCount > MAX_CHARS ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
+                                    className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300 ${charCount < MIN_CHARS || charCount > MAX_CHARS ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                     type="button"
                                     disabled={loading || charCount < MIN_CHARS || charCount > MAX_CHARS}
                                 >
