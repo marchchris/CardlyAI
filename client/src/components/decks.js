@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaEdit, FaTrashAlt, FaExclamationTriangle } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { getUserDecks, createDeck } from '../utils/databaseRoutes';
+import { FaSpinner } from "react-icons/fa";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Loading from './loadingScreen';
@@ -38,7 +39,7 @@ export default function Decks(props) {
                 setOpenDropdownId(null);
             }
         };
-        
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
@@ -194,20 +195,20 @@ export default function Decks(props) {
         setDeletingDeckId(deckId);
         setShowDeleteModal(true);
     };
-    
+
     const confirmDeleteDeck = () => {
         if (!deletingDeckId) return;
-        
+
         // Implementation of deck deletion
         console.log('Delete deck', deletingDeckId);
         // After deletion, update the decks state
         setDecks(decks.filter(deck => deck._id !== deletingDeckId));
-        
+
         // Close the modal and reset the deletingDeckId
         setShowDeleteModal(false);
         setDeletingDeckId(null);
     };
-    
+
     const cancelDeleteDeck = () => {
         setShowDeleteModal(false);
         setDeletingDeckId(null);
@@ -250,13 +251,13 @@ export default function Decks(props) {
                             </div>
                             <div className="p-4">
                                 <div className="relative">
-                                    <BsThreeDotsVertical 
-                                        className="text-gray-500 hover:text-black transition duration-200 text-xl float-right cursor-pointer" 
-                                        onClick={(e) => toggleDropdown(deck._id, e)} 
+                                    <BsThreeDotsVertical
+                                        className="text-gray-500 hover:text-black transition duration-200 text-xl float-right cursor-pointer"
+                                        onClick={(e) => toggleDropdown(deck._id, e)}
                                     />
-                                    
+
                                     {openDropdownId === deck._id && (
-                                        <div 
+                                        <div
                                             ref={dropdownRef}
                                             className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1"
                                             style={{ top: '100%' }}
@@ -427,8 +428,8 @@ export default function Decks(props) {
                                         Paste Your Study Content
                                     </label>
                                     <span className={`text-sm ${charCount < MIN_CHARS || charCount > MAX_CHARS
-                                            ? 'text-red-500'
-                                            : 'text-gray-500'
+                                        ? 'text-red-500'
+                                        : 'text-gray-500'
                                         }`}>
                                         {charCount}/{MAX_CHARS} characters
                                     </span>
@@ -477,10 +478,7 @@ export default function Decks(props) {
                                 >
                                     {loading ? (
                                         <>
-                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
+                                            <FaSpinner className="animate-spin mr-2" />
                                             Generating AI Flashcards...
                                         </>
                                     ) : (

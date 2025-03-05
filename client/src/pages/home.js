@@ -31,9 +31,19 @@ export default function Home() {
         const newText = e.target.value;
         setStudyText(newText);
         setCharCount(newText.length);
+        
+        // Clear error message when user deletes all text
+        if (newText.length === 0) {
+            setError('');
+        }
     };
 
     const validateForm = () => {        
+        if (charCount === 0) {
+            setError("Please enter some study content");
+            return false;
+        }
+        
         if (charCount < MIN_CHARS) {
             setError(`Text must contain at least ${MIN_CHARS} characters (currently ${charCount})`);
             return false;
@@ -105,6 +115,12 @@ export default function Home() {
         }
     }
 
+    // Helper function to determine if error message should be displayed
+    const shouldShowCharCountError = () => {
+        // Only show error if some text has been entered but it's less than minimum or more than maximum
+        return charCount > 0 && (charCount < MIN_CHARS || charCount > MAX_CHARS);
+    };
+
     return (
         <div className="min-h-screen flex flex-col relative">
             <Navbar currentPage={"home"} />
@@ -132,8 +148,6 @@ export default function Home() {
                         </div>
                     )}
                     
-                
-                    
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cardCount">
                             Number of Cards to Create: <span className="font-normal">{cardCount}</span>
@@ -158,21 +172,22 @@ export default function Home() {
                             <label className="block text-gray-700 text-sm font-bold" htmlFor="studyText">
                                 Paste Your Study Content
                             </label>
-                            <span className={`text-sm ${charCount < MIN_CHARS || charCount > MAX_CHARS ? 'text-red-500' : 'text-gray-500'}`}>
+                            <span className={`text-sm ${shouldShowCharCountError() ? 'text-red-500' : 'text-gray-500'}`}>
                                 {charCount}/{MAX_CHARS} characters
                             </span>
                         </div>
                         <textarea
                             id="studyText"
                             ref={textareaRef}
-                            className={`shadow appearance-none border rounded w-full p-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${charCount < MIN_CHARS || charCount > MAX_CHARS ? 'border-red-500' : ''}`}
+                            className={`shadow appearance-none border rounded w-full p-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${shouldShowCharCountError() ? 'border-red-500' : ''}`}
                             rows="10"
                             placeholder={`Paste your notes, textbook content, or any study material here (minimum ${MIN_CHARS} characters)...`}
                             value={studyText}
                             onChange={handleTextChange}
                         />
                         
-                        {charCount < MIN_CHARS && (
+                        {/* Only show error messages when there's actually content entered */}
+                        {charCount > 0 && charCount < MIN_CHARS && (
                             <p className="text-red-500 text-sm mt-2">
                                 Minimum of {MIN_CHARS} characters required.
                             </p>
@@ -184,7 +199,8 @@ export default function Home() {
                             </p>
                         )}
                         
-                        {!(charCount < MIN_CHARS || charCount > MAX_CHARS) && charCount > 0 && (
+                        {/* Show informational message when count is valid and text is entered */}
+                        {charCount >= MIN_CHARS && charCount <= MAX_CHARS && charCount > 0 && (
                             <p className="text-sm text-gray-500 mt-2">
                                 Our AI will convert this text into {cardCount} flashcards.
                             </p>
@@ -193,9 +209,9 @@ export default function Home() {
                     
                     <button
                         onClick={handleGenerateFlashcards}
-                        disabled={loading || charCount < MIN_CHARS || charCount > MAX_CHARS}
+                        disabled={loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS}
                         className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center ${
-                            loading || charCount < MIN_CHARS || charCount > MAX_CHARS
+                            loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS
                                 ? 'opacity-50 cursor-not-allowed'
                                 : 'hover:bg-blue-700'
                         }`}
