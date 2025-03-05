@@ -324,7 +324,7 @@ export default function EditDeck() {
                 </div>
                 
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden p-4">
-                    <div className="p-4 bg-gray-50 border-b flex items-center justify-between">
+                    <div className="p-4 border-b flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-gray-700">Flashcards ({deck.cards.length})</h2>
                         <button
                             onClick={handleAddCardClick}

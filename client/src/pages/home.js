@@ -124,13 +124,12 @@ export default function Home() {
     return (
         <div className="min-h-screen flex flex-col relative">
             <Navbar currentPage={"home"} />
-            <FloatingIcons />
-            <div className="max-w-3xl mx-auto px-4 py-12 mt-16 w-full flex-grow">
+            <div className="max-w-3xl flex-grow mx-auto flex flex-col justify-center mt-10">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-black mb-4">
+                    <h1 className="text-3xl 2xl:text-4xl font-bold text-black mb-4">
                         Convert Text Into Study Flashcards
                     </h1>
-                    <p className="text-lg text-gray-600">
+                    <p className="2xl:text-lg text-base text-gray-600">
                         Simply paste your study material below and let AI summarize it into flashcards for you.
                     </p>
                 </div>
@@ -149,11 +148,11 @@ export default function Home() {
                     )}
                     
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cardCount">
+                        <label className="block text-gray-700 2xl:text-sm text-xs font-bold mb-2" htmlFor="cardCount">
                             Number of Cards to Create: <span className="font-normal">{cardCount}</span>
                         </label>
                         <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-500">{MIN_CARDS}</span>
+                            <span className="2xl:text-sm text-xs text-gray-500">{MIN_CARDS}</span>
                             <input
                                 id="cardCount"
                                 type="range"
@@ -163,24 +162,24 @@ export default function Home() {
                                 onChange={(e) => setCardCount(parseInt(e.target.value))}
                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                             />
-                            <span className="text-sm text-gray-500">{MAX_CARDS}</span>
+                            <span className="2xl:text-sm text-xs text-gray-500">{MAX_CARDS}</span>
                         </div>
                     </div>
                     
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2">
-                            <label className="block text-gray-700 text-sm font-bold" htmlFor="studyText">
+                            <label className="block text-gray-700 2xl:text-sm text-xs font-bold" htmlFor="studyText">
                                 Paste Your Study Content
                             </label>
-                            <span className={`text-sm ${shouldShowCharCountError() ? 'text-red-500' : 'text-gray-500'}`}>
+                            <span className={`2xl:text-sm text-xs ${shouldShowCharCountError() ? 'text-red-500' : 'text-gray-500'}`}>
                                 {charCount}/{MAX_CHARS} characters
                             </span>
                         </div>
                         <textarea
                             id="studyText"
                             ref={textareaRef}
-                            className={`shadow appearance-none border rounded w-full p-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${shouldShowCharCountError() ? 'border-red-500' : ''}`}
-                            rows="10"
+                            className={`2xl:text-base text-sm shadow appearance-none border rounded w-full p-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${shouldShowCharCountError() ? 'border-red-500' : ''}`}
+                            rows="6"
                             placeholder={`Paste your notes, textbook content, or any study material here (minimum ${MIN_CHARS} characters)...`}
                             value={studyText}
                             onChange={handleTextChange}
@@ -188,7 +187,7 @@ export default function Home() {
                         
                         {/* Only show error messages when there's actually content entered */}
                         {charCount > 0 && charCount < MIN_CHARS && (
-                            <p className="text-red-500 text-sm mt-2">
+                            <p className="text-red-500 2xl:text-sm xl:text-xs mt-2">
                                 Minimum of {MIN_CHARS} characters required.
                             </p>
                         )}
@@ -201,7 +200,7 @@ export default function Home() {
                         
                         {/* Show informational message when count is valid and text is entered */}
                         {charCount >= MIN_CHARS && charCount <= MAX_CHARS && charCount > 0 && (
-                            <p className="text-sm text-gray-500 mt-2">
+                            <p className="2xl:text-sm text-xs text-gray-500 mt-2">
                                 Our AI will convert this text into {cardCount} flashcards.
                             </p>
                         )}
@@ -210,7 +209,7 @@ export default function Home() {
                     <button
                         onClick={handleGenerateFlashcards}
                         disabled={loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS}
-                        className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center ${
+                        className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center 2xl:text-sm text-xs ${
                             loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS
                                 ? 'opacity-50 cursor-not-allowed'
                                 : 'hover:bg-blue-700'
@@ -227,7 +226,8 @@ export default function Home() {
                     </button>
                 </div>
                 
-                <div className="mt-6 text-center text-sm text-gray-500">
+                {/* Only show this text on 2xl screens */}
+                <div className="hidden 2xl:block mt-6 text-center text-sm text-gray-500">
                     <p>No account required. Try it out now!</p>
                 </div>
             </div>

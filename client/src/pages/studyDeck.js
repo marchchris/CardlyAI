@@ -128,9 +128,10 @@ export default function StudyDeck() {
     }
 
     return (
-        <div className="min-h-screen">
+        <div className="h-screen">
             <Navbar currentPage="study" />
 
+            <div className = "h-screen flex flex-col items-center justify-center overflow-hidden">
             <div className="container mx-auto pt-24 px-4 pb-12">
                 <div className="max-w-2xl mx-auto">
                     <div className="flex items-center mb-8">
@@ -204,6 +205,7 @@ export default function StudyDeck() {
                         </div>
                     )}
                 </div>
+            </div>
             </div>
         </div>
     );
