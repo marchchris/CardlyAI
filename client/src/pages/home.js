@@ -10,8 +10,6 @@ export default function Home() {
     const [studyText, setStudyText] = useState('');
     const [charCount, setCharCount] = useState(0);
     const [cardCount, setCardCount] = useState(10);
-    const [title, setTitle] = useState('');
-    const [selectedColor, setSelectedColor] = useState('blue');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -35,12 +33,7 @@ export default function Home() {
         setCharCount(newText.length);
     };
 
-    const validateForm = () => {
-        if (!title.trim()) {
-            setError('Please enter a title for your flashcard deck');
-            return false;
-        }
-        
+    const validateForm = () => {        
         if (charCount < MIN_CHARS) {
             setError(`Text must contain at least ${MIN_CHARS} characters (currently ${charCount})`);
             return false;
@@ -66,8 +59,6 @@ export default function Home() {
         
         try {
             const result = await generateDeck(
-                title,
-                selectedColor,
                 cardCount,
                 studyText
             );
@@ -141,37 +132,7 @@ export default function Home() {
                         </div>
                     )}
                     
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="deckTitle">
-                            Deck Title
-                        </label>
-                        <input
-                            id="deckTitle"
-                            type="text"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            placeholder="e.g., Biology 101"
-                            required
-                        />
-                    </div>
-                    
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="deckColor">
-                            Deck Color
-                        </label>
-                        <div className="flex space-x-2">
-                            {colorOptions.map((color) => (
-                                <button
-                                    key={color.value}
-                                    type="button"
-                                    onClick={() => setSelectedColor(color.value)}
-                                    className={`w-8 h-8 rounded-full ${getColorClass(color.value)} ${selectedColor === color.value ? 'ring-2 ring-offset-2 ring-gray-500' : ''}`}
-                                    title={color.name}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                
                     
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cardCount">
@@ -232,9 +193,9 @@ export default function Home() {
                     
                     <button
                         onClick={handleGenerateFlashcards}
-                        disabled={loading || charCount < MIN_CHARS || charCount > MAX_CHARS || !title.trim()}
+                        disabled={loading || charCount < MIN_CHARS || charCount > MAX_CHARS}
                         className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center ${
-                            loading || charCount < MIN_CHARS || charCount > MAX_CHARS || !title.trim() 
+                            loading || charCount < MIN_CHARS || charCount > MAX_CHARS
                                 ? 'opacity-50 cursor-not-allowed'
                                 : 'hover:bg-blue-700'
                         }`}

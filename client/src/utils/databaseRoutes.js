@@ -102,7 +102,7 @@ export const createDeck = async (userID, title, colour, num_cards, content) => {
  * @param {string} content - The content to use for generating flashcards
  * @returns {Promise<Object>} - Response with the generated deck data
  */
-export const generateDeck = async (title, colour, num_cards, content) => {
+export const generateDeck = async (num_cards, content) => {
   try {
     const response = await fetch(`${API_URL}/api/generateDeck`, {
       method: 'POST',
@@ -110,8 +110,6 @@ export const generateDeck = async (title, colour, num_cards, content) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        title, 
-        colour, 
         num_cards, 
         content 
       }),

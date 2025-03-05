@@ -82,12 +82,6 @@ export default function StudyDeckGuest() {
         navigate('/');
     };
 
-    const handleStartOver = () => {
-        // Clear the stored deck and go back to home page
-        localStorage.removeItem('guestDeck');
-        navigate('/');
-    };
-
     const getColorClass = (color) => {
         switch (color) {
             case 'red': return 'bg-red-500';
@@ -129,13 +123,7 @@ export default function StudyDeckGuest() {
 
             <div className="container mx-auto pt-24 px-4 pb-12">
                 <div className="max-w-2xl mx-auto">
-                    {deck && (
-                        <div className="flex items-center mb-8">
-                            <div className={`h-6 w-6 rounded-full mr-3 ${getColorClass(deck.colour)}`}></div>
-                            <h1 className="text-3xl font-bold text-gray-800">{deck.title}</h1>
-                        </div>
-                    )}
-                    
+                
                     {cards.length > 0 ? (
                         <>
                             <div className="flex justify-between items-center mb-4">
@@ -143,12 +131,6 @@ export default function StudyDeckGuest() {
                                     Card {currentCardIndex + 1} of {cards.length}
                                 </span>
                                 <div className="flex items-center space-x-4">
-                                    <button
-                                        onClick={handleStartOver}
-                                        className="text-gray-600 hover:text-blue-600 transition-colors duration-300"
-                                    >
-                                        Start Over
-                                    </button>
                                     <button
                                         onClick={handleBackToHome}
                                         className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-300"
@@ -200,7 +182,7 @@ export default function StudyDeckGuest() {
                             </p>
                             <button
                                 onClick={handleBackToHome}
-                                className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none"
+                                className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded focus:outline-none"
                             >
                                 Back to Home
                             </button>
