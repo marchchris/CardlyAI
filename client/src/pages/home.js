@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/navbar";
 import FloatingIcons from "../components/FloatingIcons";
 import { generateDeck } from "../utils/databaseRoutes";
 import { FaSpinner } from "react-icons/fa";
 
 export default function Home() {
+    const navigate = useNavigate();
     const [studyText, setStudyText] = useState('');
     const [charCount, setCharCount] = useState(0);
     const [cardCount, setCardCount] = useState(10);
@@ -70,9 +72,20 @@ export default function Home() {
                 studyText
             );
             
+            // Save the generated deck to localStorage
+            const deckToSave = {
+                ...result.deck,
+                savedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('guestDeck', JSON.stringify(deckToSave));
+            
             setSuccess('Flashcards generated successfully!');
-            // Here you could navigate to a results page or show the cards
-            console.log('Generated deck:', result.deck);
+            
+            // Navigate to the guest study page after a brief delay to show success message
+            setTimeout(() => {
+                navigate('/study-deck-guest');
+            }, 1000);
             
         } catch (err) {
             console.error('Error generating flashcards:', err);
