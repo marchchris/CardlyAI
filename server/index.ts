@@ -202,6 +202,69 @@ app.post('/api/createDeck', async (req: Request, res: Response) => {
   }
 });
 
+// Generate deck route - does not require userID or save to database
+app.post('/api/generateDeck', async (req: Request, res: Response) => {
+  try {
+    const { title, colour, num_cards, content }: {
+      title: string;
+      colour: string;
+      num_cards: number;
+      content: string;
+    } = req.body;
+
+    // Validate required fields
+    if (!title || typeof title !== 'string') {
+      res.status(400).json({ error: 'Valid title is required' });
+      return;
+    }
+
+    if (!colour || typeof colour !== 'string') {
+      res.status(400).json({ error: 'Valid colour is required' });
+      return;
+    }
+
+    if (num_cards === undefined || typeof num_cards !== 'number') {
+      res.status(400).json({ error: 'Valid num_cards is required' });
+      return;
+    }
+
+    if (!content || typeof content !== 'string') {
+      res.status(400).json({ error: 'Valid content is required' });
+      return;
+    }
+
+    try {
+      // Generate flashcards using the AI service
+      const cards = await generateFlashcards(content, num_cards);
+
+      // Create new deck object with the generated cards but don't save to database
+      const generatedDeck: Deck = {
+        _id: new ObjectId(), // Generate an ID for consistency but it won't be stored
+        title,
+        colour,
+        num_cards,
+        cards,
+        created_at: new Date()
+      };
+
+      // Return the generated deck without saving
+      res.status(200).json({
+        message: 'Flashcards generated successfully',
+        deck: generatedDeck
+      });
+      return;
+    } catch (aiError) {
+      console.error("AI Service error:", aiError);
+      res.status(500).json({ error: 'Failed to generate flashcards' });
+      return;
+    }
+  } catch (error) {
+    console.error('Error generating deck:', error);
+    res.status(500).json({ error: 'Internal server error' });
+    return;
+  }
+});
+
 // Get User Decks route
 app.get('/api/getUserDecks/:userID', async (req: Request, res: Response) => {
   try {

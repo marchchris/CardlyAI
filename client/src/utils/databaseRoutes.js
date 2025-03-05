@@ -95,6 +95,42 @@ export const createDeck = async (userID, title, colour, num_cards, content) => {
 };
 
 /**
+ * Generates flashcards without requiring a user account or saving to database
+ * @param {string} title - The title of the deck
+ * @param {string} colour - The color/theme of the deck
+ * @param {number} num_cards - The number of cards to generate
+ * @param {string} content - The content to use for generating flashcards
+ * @returns {Promise<Object>} - Response with the generated deck data
+ */
+export const generateDeck = async (title, colour, num_cards, content) => {
+  try {
+    const response = await fetch(`${API_URL}/api/generateDeck`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        title, 
+        colour, 
+        num_cards, 
+        content 
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to generate flashcards');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error generating flashcards:', error);
+    throw error;
+  }
+};
+
+/**
  * Retrieves all decks for a specific user
  * @param {string} userID - The unique identifier for the user
  * @returns {Promise<Array>} - Array of deck objects belonging to the user
