@@ -5,7 +5,8 @@ import {
     signOut,
     sendPasswordResetEmail,
     reauthenticateWithCredential,
-    EmailAuthProvider
+    EmailAuthProvider,
+    sendEmailVerification
   } from "firebase/auth";
   import { createContext, useEffect, useState } from "react";
   import PropTypes from "prop-types";
@@ -42,6 +43,19 @@ import {
       return reauthenticateWithCredential(auth.currentUser, credential);
     };
   
+    const sendVerificationEmail = () => {
+      if (auth.currentUser && !auth.currentUser.emailVerified) {
+        return sendEmailVerification(auth.currentUser);
+      }
+      return Promise.reject("No user is signed in or email is already verified");
+    };
+  
+    const checkEmailVerification = () => {
+      return auth.currentUser.reload().then(() => {
+        return auth.currentUser.emailVerified;
+      });
+    };
+  
     const cancelLoading = () => {
       setLoading(false);
       return null;
@@ -67,6 +81,8 @@ import {
       cancelLoading,
       resetPassword,
       reauthenticateUser,
+      sendVerificationEmail,
+      checkEmailVerification,
     };
   
     return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;

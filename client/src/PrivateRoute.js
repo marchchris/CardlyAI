@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 
 import Loading from "./components/loadingScreen";
+import VerifyEmail from "./pages/verifyEmail";
 
 const PrivateRoute = ({ children }) => {
   const { loading, user } = useContext(AuthContext);
@@ -14,7 +15,7 @@ const PrivateRoute = ({ children }) => {
 
   if (user) {
     if (!user.emailVerified) {
-      return <h1>You must verify email</h1>
+      return <VerifyEmail />;
     }
     return children;
   }

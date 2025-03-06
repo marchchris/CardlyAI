@@ -8,6 +8,7 @@ import Dashboard from "./pages/dashboard";
 import StudyDeck from "./pages/studyDeck";
 import EditDeck from "./pages/editdeck";
 import StudyDeckGuest from "./pages/studyDeckGuest";
+import VerifyEmail from "./pages/verifyEmail";
 
 // Protected Routes
 import PrivateRoute from "./PrivateRoute";
