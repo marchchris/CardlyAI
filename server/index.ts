@@ -604,6 +604,54 @@ app.post('/api/card/:userID/:deckID', async (req: Request, res: Response) => {
   }
 });
 
+// Delete Deck route
+app.delete('/api/deck/:userID/:deckID', async (req: Request, res: Response) => {
+  try {
+    const { userID, deckID } = req.params;
+
+    // Validate required parameters
+    if (!userID || typeof userID !== 'string') {
+      res.status(400).json({ error: 'Valid userID is required' });
+      return;
+    }
+
+    if (!deckID || typeof deckID !== 'string') {
+      res.status(400).json({ error: 'Valid deckID is required' });
+      return;
+    }
+
+    const usersCollection = database.collection(DB_COLLECTION);
+
+    // Find the user
+    const user = await usersCollection.findOne({ userID });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Find and remove the deck with matching ID
+    const result = await usersCollection.updateOne(
+      { userID },
+      { $pull: { decks: { _id: new ObjectId(deckID) } } }
+    );
+
+    if (result.modifiedCount === 0) {
+      res.status(404).json({ error: 'Deck not found or already deleted' });
+      return;
+    }
+
+    res.status(200).json({
+      message: 'Deck deleted successfully'
+    });
+    return;
+  } catch (error) {
+    console.error('Error deleting deck:', error);
+    res.status(500).json({ error: 'Internal server error' });
+    return;
+  }
+});
+
 // Connect to database before starting server
 connectToDatabase().then(() => {
   app.listen(PORT, () => {

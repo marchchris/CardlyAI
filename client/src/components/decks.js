@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaEdit, FaTrashAlt, FaExclamationTriangle } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { getUserDecks, createDeck } from '../utils/databaseRoutes';
+import { getUserDecks, createDeck, deleteDeck } from '../utils/databaseRoutes';
 import { FaSpinner } from "react-icons/fa";
 
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -22,6 +22,7 @@ export default function Decks(props) {
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [deletingDeckId, setDeletingDeckId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingDeck, setDeletingDeck] = useState(false);
 
     // Change from word count to character count
     const MIN_CHARS = 300;
@@ -196,17 +197,29 @@ export default function Decks(props) {
         setShowDeleteModal(true);
     };
 
-    const confirmDeleteDeck = () => {
+    const confirmDeleteDeck = async () => {
         if (!deletingDeckId) return;
 
-        // Implementation of deck deletion
-        console.log('Delete deck', deletingDeckId);
-        // After deletion, update the decks state
-        setDecks(decks.filter(deck => deck._id !== deletingDeckId));
-
-        // Close the modal and reset the deletingDeckId
-        setShowDeleteModal(false);
-        setDeletingDeckId(null);
+        try {
+            setDeletingDeck(true);
+            // Call the API to delete the deck
+            await deleteDeck(user.uid, deletingDeckId);
+            
+            // After successful deletion, update the decks state
+            setDecks(decks.filter(deck => deck._id !== deletingDeckId));
+            
+            // Set success message (optional)
+            setSuccess && setSuccess("Deck deleted successfully");
+        } catch (error) {
+            console.error("Error deleting deck:", error);
+            // Set error message (optional)
+            setError && setError("Failed to delete deck. Please try again.");
+        } finally {
+            // Close the modal and reset states
+            setShowDeleteModal(false);
+            setDeletingDeckId(null);
+            setDeletingDeck(false);
+        }
     };
 
     const cancelDeleteDeck = () => {
@@ -330,14 +343,25 @@ export default function Decks(props) {
                                 <button
                                     onClick={cancelDeleteDeck}
                                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline duration-300"
+                                    disabled={deletingDeck}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={confirmDeleteDeck}
                                     className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300"
+                                    disabled={deletingDeck}
                                 >
-                                    <FaTrashAlt className="mr-2" /> Delete Deck
+                                    {deletingDeck ? (
+                                        <>
+                                            <FaSpinner className="animate-spin mr-2" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaTrashAlt className="mr-2" /> Delete Deck
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>

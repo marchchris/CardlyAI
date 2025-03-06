@@ -274,3 +274,31 @@ export const addCard = async (userID, deckID, question, answer) => {
     throw error;
   }
 };
+
+/**
+ * Deletes an entire deck
+ * @param {string} userID - The unique identifier for the user
+ * @param {string} deckID - The unique identifier for the deck to delete
+ * @returns {Promise<Object>} - Response with deletion confirmation
+ */
+export const deleteDeck = async (userID, deckID) => {
+  try {
+    const response = await fetch(`${API_URL}/api/deck/${userID}/${deckID}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to delete deck');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error deleting deck:', error);
+    throw error;
+  }
+};

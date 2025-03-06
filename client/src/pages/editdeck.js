@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from "../components/navbar";
 import { getDeckById, editCard, deleteCard, addCard } from '../utils/databaseRoutes';
-import { FaPlus, FaEdit, FaTrashAlt, FaSave, FaTimes, FaCheck, FaExclamationTriangle } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrashAlt, FaSave, FaTimes, FaCheck, FaExclamationTriangle, FaSpinner } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaArrowLeft } from 'react-icons/fa';
 
@@ -26,6 +26,7 @@ export default function EditDeck() {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [deletingCardIndex, setDeletingCardIndex] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingCard, setDeletingCard] = useState(false);
 
     const dropdownRef = useRef(null);
 
@@ -100,6 +101,7 @@ export default function EditDeck() {
         if (deletingCardIndex === null) return;
 
         try {
+            setDeletingCard(true);
             await deleteCard(user.uid, deckID, deletingCardIndex);
 
             // Update local state by removing card
@@ -111,11 +113,12 @@ export default function EditDeck() {
             console.error("Error deleting card:", err);
             setError("Failed to delete card. Please try again.");
             setSuccess(null);
+        } finally {
+            // Close the modal and reset
+            setShowDeleteModal(false);
+            setDeletingCardIndex(null);
+            setDeletingCard(false);
         }
-
-        // Close the modal and reset
-        setShowDeleteModal(false);
-        setDeletingCardIndex(null);
     };
 
     const cancelDeleteCard = () => {
@@ -554,14 +557,25 @@ export default function EditDeck() {
                                 <button
                                     onClick={cancelDeleteCard}
                                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline duration-300"
+                                    disabled={deletingCard}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={confirmDeleteCard}
                                     className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center duration-300"
+                                    disabled={deletingCard}
                                 >
-                                    <FaTrashAlt className="mr-2" /> Delete Card
+                                    {deletingCard ? (
+                                        <>
+                                            <FaSpinner className="animate-spin mr-2" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaTrashAlt className="mr-2" /> Delete Card
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
