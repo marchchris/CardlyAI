@@ -1,9 +1,4 @@
-# CardlyAI - AI-Powered Flashcard Generator
-<div align="center">
-
-📚 **Transform your study materials into interactive flashcards instantly** 📚
-
-</div>
+# 📚 CardlyAI - AI-Powered Flashcard Generator
 
 ## 🚀 What is CardlyAI?
 
@@ -24,7 +19,7 @@ CardlyAI uses a large language model to summarise and convert key concepts from 
 
 ### For Quick Study Sessions (No Account Needed)
 
-1. **Visit [CardlyAI](https://cardlyai.vercel.app)**
+1. **Visit [CardlyAI](https://cardly-ai.vercel.app/)**
 2. **Paste Your Study Content**
    - Copy text from your notes, textbooks, or online resources
    - Paste into the text box on our homepage
@@ -63,4 +58,4 @@ CardlyAI uses a large language model to summarise and convert key concepts from 
 
 ## 🚀 See Live
 
-[**Try CardlyAI**](https://cardlyai.vercel.app) - No account required to start generating flashcards!
+[**Try CardlyAI**](https://cardly-ai.vercel.app/) - No account required to start generating flashcards!
