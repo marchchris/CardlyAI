@@ -1,12 +1,10 @@
 # 📚 CardlyAI - AI-Powered Flashcard Generator
 
-![CardlyAI Demo](cardlyAI.gif)
+![CardlyAI Demo](README/cardlyAI.gif)
 
 ## 🚀 What is CardlyAI?
 
 CardlyAI uses a large language model to summarise and convert key concepts from input text, into concise and informative study flashcards, which are displayed with an interactive interface for studying.
-
-
 
 ## ✨ Key Features
 
