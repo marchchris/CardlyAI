@@ -23,6 +23,8 @@ export default function Decks(props) {
     const [deletingDeckId, setDeletingDeckId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingDeck, setDeletingDeck] = useState(false);
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
 
     // Change from word count to character count
     const MIN_CHARS = 300;
