@@ -63,6 +63,32 @@ export default function StudyDeck() {
         fetchDeckAndCards();
     }, [deckId, user]);
 
+    // Add keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (cards.length === 0) return;
+            
+            switch (e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    handlePrevCard();
+                    break;
+                case 'ArrowRight': 
+                    e.preventDefault();
+                    handleNextCard();
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [cards, currentCardIndex]); // Update dependencies
+
     const handlePrevCard = () => {
         // Reset flip state first
         setIsFlipped(false);

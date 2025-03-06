@@ -18,10 +18,28 @@ const Flashcard = forwardRef(({ question, answer, onFlip }, ref) => {
         }
     };
 
-    // Expose a reset method through the ref
+    // Effect to handle keyboard events for flipping the card
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Up or down arrow keys flip the card
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                handleFlip();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isFlipped]); // Re-attach when isFlipped changes to keep the closure updated
+
+    // Expose a reset method and flip method through the ref
     if (ref) {
         ref.current = {
-            reset: () => setIsFlipped(false)
+            reset: () => setIsFlipped(false),
+            flip: () => handleFlip()
         };
     }
 
