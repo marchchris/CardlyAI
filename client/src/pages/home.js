@@ -19,7 +19,7 @@ export default function Home() {
     const MIN_CHARS = 300;
     const MAX_CHARS = 10000;
     const MIN_CARDS = 3;
-    const MAX_CARDS = 50;
+    const MAX_CARDS = 30;
 
     useEffect(() => {
         if (textareaRef.current) {

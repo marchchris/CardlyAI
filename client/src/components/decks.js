@@ -27,7 +27,7 @@ export default function Decks(props) {
     const MIN_CHARS = 300;
     const MAX_CHARS = 10000;
     const MIN_CARDS = 3;
-    const MAX_CARDS = 50;
+    const MAX_CARDS = 30;
 
     const textareaRef = useRef(null);
     const dropdownRef = useRef(null);
