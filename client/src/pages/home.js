@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/navbar";
-import FloatingIcons from "../components/FloatingIcons";
+import { FaGithub } from "react-icons/fa";
 import { generateDeck } from "../utils/databaseRoutes";
 import { FaSpinner } from "react-icons/fa";
 
@@ -31,29 +31,29 @@ export default function Home() {
         const newText = e.target.value;
         setStudyText(newText);
         setCharCount(newText.length);
-        
+
         // Clear error message when user deletes all text
         if (newText.length === 0) {
             setError('');
         }
     };
 
-    const validateForm = () => {        
+    const validateForm = () => {
         if (charCount === 0) {
             setError("Please enter some study content");
             return false;
         }
-        
+
         if (charCount < MIN_CHARS) {
             setError(`Text must contain at least ${MIN_CHARS} characters (currently ${charCount})`);
             return false;
         }
-        
+
         if (charCount > MAX_CHARS) {
             setError(`Text exceeds the maximum of ${MAX_CHARS} characters (currently ${charCount})`);
             return false;
         }
-        
+
         setError('');
         return true;
     };
@@ -62,32 +62,32 @@ export default function Home() {
         if (!validateForm()) {
             return;
         }
-        
+
         setLoading(true);
         setError('');
         setSuccess('');
-        
+
         try {
             const result = await generateDeck(
                 cardCount,
                 studyText
             );
-            
+
             // Save the generated deck to localStorage
             const deckToSave = {
                 ...result.deck,
                 savedAt: new Date().toISOString()
             };
-            
+
             localStorage.setItem('guestDeck', JSON.stringify(deckToSave));
-            
+
             setSuccess('Flashcards generated successfully!');
-            
+
             // Navigate to the guest study page after a brief delay to show success message
             setTimeout(() => {
                 navigate('/study-deck-guest');
             }, 1000);
-            
+
         } catch (err) {
             console.error('Error generating flashcards:', err);
             setError('Failed to generate flashcards. Please try again.');
@@ -133,20 +133,20 @@ export default function Home() {
                         Simply paste your study material below and let AI summarize it into flashcards for you.
                     </p>
                 </div>
-                
+
                 <div className="bg-white p-6 rounded-lg shadow-md">
                     {error && (
                         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
                             {error}
                         </div>
                     )}
-                    
+
                     {success && (
                         <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
                             {success}
                         </div>
                     )}
-                    
+
                     <div className="mb-4">
                         <label className="block text-gray-700 2xl:text-sm text-xs font-bold mb-2" htmlFor="cardCount">
                             Number of Cards to Create: <span className="font-normal">{cardCount}</span>
@@ -165,7 +165,7 @@ export default function Home() {
                             <span className="2xl:text-sm text-xs text-gray-500">{MAX_CARDS}</span>
                         </div>
                     </div>
-                    
+
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2">
                             <label className="block text-gray-700 2xl:text-sm text-xs font-bold" htmlFor="studyText">
@@ -184,20 +184,20 @@ export default function Home() {
                             value={studyText}
                             onChange={handleTextChange}
                         />
-                        
+
                         {/* Only show error messages when there's actually content entered */}
                         {charCount > 0 && charCount < MIN_CHARS && (
                             <p className="text-red-500 2xl:text-sm xl:text-xs mt-2">
                                 Minimum of {MIN_CHARS} characters required.
                             </p>
                         )}
-                        
+
                         {charCount > MAX_CHARS && (
                             <p className="text-red-500 text-sm mt-2">
                                 Maximum of {MAX_CHARS} characters allowed.
                             </p>
                         )}
-                        
+
                         {/* Show informational message when count is valid and text is entered */}
                         {charCount >= MIN_CHARS && charCount <= MAX_CHARS && charCount > 0 && (
                             <p className="2xl:text-sm text-xs text-gray-500 mt-2">
@@ -205,15 +205,14 @@ export default function Home() {
                             </p>
                         )}
                     </div>
-                    
+
                     <button
                         onClick={handleGenerateFlashcards}
                         disabled={loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS}
-                        className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center 2xl:text-sm text-xs ${
-                            loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS
+                        className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center 2xl:text-sm text-xs ${loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS
                                 ? 'opacity-50 cursor-not-allowed'
                                 : 'hover:bg-blue-700'
-                        }`}
+                            }`}
                     >
                         {loading ? (
                             <>
@@ -225,11 +224,19 @@ export default function Home() {
                         )}
                     </button>
                 </div>
-                
+
                 {/* Only show this text on 2xl screens */}
                 <div className="hidden 2xl:block mt-6 text-center text-sm text-gray-500">
                     <p>No account required. Try it out now!</p>
                 </div>
+
+
+            </div>
+            <div className="flex justify-center items-center text-neutral-700 mb-4 space-x-2">
+                <a href="https://marchchris.github.io/" className="text-xs hover:text-black">Created By: <u>Chris Marchand</u></a>
+                <a href="https://github.com/marchchris" className="text-neutral-700 hover:text-black">
+                    <FaGithub size={16} />
+                </a>
             </div>
         </div>
     );
