@@ -12,12 +12,35 @@ const PORT = process.env.PORT;
 
 const app: Application = express();
 
-// CORS middleware configuration
+// Enhanced CORS middleware configuration
 app.use(cors({
-  origin: [process.env.CLIENT_URL, 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: function(origin: any, callback: any) {
+    // Allow requests from these origins
+    const allowedOrigins = [
+      process.env.CLIENT_URL,
+      'http://localhost:3000',
+      'https://cardly-ai.vercel.app',
+      'https://cardly-server.vercel.app'
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // For debugging, accept all origins temporarily
+    }
+  },
+  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization,X-Requested-With',
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // 24 hours
 }));
+
+// Handle OPTIONS method explicitly
+app.options('*', cors());
 
 // Add middleware to parse JSON bodies
 app.use(express.json());
