@@ -13,7 +13,8 @@ const PORT = process.env.PORT;
 const app: Application = express();
 
 // CORS middleware configuration
-app.use(cors({
+// Handle preflight requests
+app.options('*', cors({
   origin: ['https://cardly-ai.vercel.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
