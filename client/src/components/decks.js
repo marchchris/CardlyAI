@@ -59,7 +59,6 @@ export default function Decks(props) {
                     setDecks(userDecks || []);
                 } catch (error) {
                     console.error("Error fetching decks:", error);
-                    // Optionally set an error state here
                 } finally {
                     setLoadingDecks(false);
                 }
@@ -94,7 +93,7 @@ export default function Decks(props) {
             newErrors.title = 'Title is required';
         }
 
-        // Content validation - now using character count
+        // Content validation now using character count
         if (charCount < MIN_CHARS) {
             newErrors.content = `Text must contain at least ${MIN_CHARS} characters (currently ${charCount})`;
         } else if (charCount > MAX_CHARS) {
@@ -169,7 +168,7 @@ export default function Decks(props) {
         }
     }
 
-    // Add a function to get the error message for character count
+    // function to get the error message for character count
     const getCharCountErrorMessage = () => {
         if (charCount < MIN_CHARS) {
             return `Minimum of ${MIN_CHARS} characters required.`;
@@ -235,11 +234,7 @@ export default function Decks(props) {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            {loadingDecks ? (
-                <div className="w-full flex items-center justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-            ) : decks.length === 0 ? (
+            {decks.length === 0 ? (
                 <div className="w-full flex items-center justify-center">
                     <div className="bg-white shadow-md rounded-lg p-8 text-center w-1/2">
                         <h2 className="text-2xl font-semibold text-gray-700 mb-4">You have no decks</h2>
