@@ -151,14 +151,6 @@ export default function EditDeck() {
         }
 
         try {
-            const result = await editCard(
-                user.uid,
-                deckID,
-                cardBeingEdited.index,
-                cardBeingEdited.question,
-                cardBeingEdited.answer
-            );
-
             // Update local state with edited card
             const updatedCards = [...deck.cards];
             updatedCards[cardBeingEdited.index] = {
@@ -191,13 +183,6 @@ export default function EditDeck() {
         }
 
         try {
-            const result = await addCard(
-                user.uid,
-                deckID,
-                newCardData.question,
-                newCardData.answer
-            );
-
             // Update local state with new card at the TOP of the list
             const updatedCards = [
                 {
@@ -237,17 +222,6 @@ export default function EditDeck() {
     const handleBackToDashboard = () => {
         navigate('/dashboard');
     };
-
-    function getColorClass(color) {
-        switch (color) {
-            case 'red': return 'bg-red-500';
-            case 'green': return 'bg-green-500';
-            case 'blue': return 'bg-blue-500';
-            case 'yellow': return 'bg-yellow-500';
-            case 'purple': return 'bg-purple-500';
-            default: return 'bg-gray-500';
-        }
-    }
 
     if (loading) {
         return (

@@ -143,7 +143,7 @@ export default function StudyDeck() {
                         <p className="text-gray-700 mb-6">{error}</p>
                         <button
                             onClick={handleBackToDashboard}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none"
+                            className="bg-blue-600 hover:bg-blue-700 font-medium text-white py-2 px-4 rounded focus:outline-none"
                         >
                             Back to Dashboard
                         </button>
