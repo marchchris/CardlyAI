@@ -1,16 +1,20 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
+import { AuthContext } from "../config/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/navbar";
 import { FaGithub } from "react-icons/fa";
 import { generateDeck } from "../utils/databaseRoutes";
 import { FaSpinner } from "react-icons/fa";
 
+import Loading from "../components/loadingScreen";
+
 export default function Home() {
+    const { loading, user } = useContext(AuthContext);
     const navigate = useNavigate();
     const [studyText, setStudyText] = useState('');
     const [charCount, setCharCount] = useState(0);
     const [cardCount, setCardCount] = useState(10);
-    const [loading, setLoading] = useState(false);
+    const [processLoading, setProcessLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const textareaRef = useRef(null);
@@ -20,6 +24,8 @@ export default function Home() {
     const MAX_CHARS = 10000;
     const MIN_CARDS = 3;
     const MAX_CARDS = 30;
+
+    // Show loading screen when user state is stil being loaded.
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -63,7 +69,7 @@ export default function Home() {
             return;
         }
 
-        setLoading(true);
+        setProcessLoading(true);
         setError('');
         setSuccess('');
 
@@ -92,34 +98,22 @@ export default function Home() {
             console.error('Error generating flashcards:', err);
             setError('Failed to generate flashcards. Please try again.');
         } finally {
-            setLoading(false);
+            setProcessLoading(false);
         }
     };
-
-    const colorOptions = [
-        { name: 'Red', value: 'red' },
-        { name: 'Green', value: 'green' },
-        { name: 'Blue', value: 'blue' },
-        { name: 'Yellow', value: 'yellow' },
-        { name: 'Purple', value: 'purple' },
-    ];
-
-    function getColorClass(color) {
-        switch (color) {
-            case 'red': return 'bg-red-500';
-            case 'green': return 'bg-green-500';
-            case 'blue': return 'bg-blue-500';
-            case 'yellow': return 'bg-yellow-500';
-            case 'purple': return 'bg-purple-500';
-            default: return 'bg-gray-500';
-        }
-    }
 
     // Helper function to determine if error message should be displayed
     const shouldShowCharCountError = () => {
         // Only show error if some text has been entered but it's less than minimum or more than maximum
         return charCount > 0 && (charCount < MIN_CHARS || charCount > MAX_CHARS);
     };
+
+    if (loading) {
+        return (
+            <Loading />
+        );
+    }
+
 
     return (
         <div className="min-h-screen flex flex-col relative">
@@ -208,13 +202,13 @@ export default function Home() {
 
                     <button
                         onClick={handleGenerateFlashcards}
-                        disabled={loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS}
-                        className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center 2xl:text-sm text-xs ${loading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS
+                        disabled={processLoading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS}
+                        className={`w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center 2xl:text-sm text-xs ${processLoading || charCount === 0 || charCount < MIN_CHARS || charCount > MAX_CHARS
                                 ? 'opacity-50 cursor-not-allowed'
                                 : 'hover:bg-blue-700'
                             }`}
                     >
-                        {loading ? (
+                        {processLoading ? (
                             <>
                                 <FaSpinner className="animate-spin mr-2" />
                                 Generating Flashcards...
