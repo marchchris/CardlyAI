@@ -1,4 +1,4 @@
-# CardlyAI - AI-Powered Flashcard Generator
+# CardlyAI
 
 ![CardlyAI Showcase](README/cardlyShowcase.png)
 
